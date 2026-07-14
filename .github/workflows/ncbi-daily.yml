@@ -101,9 +101,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.taxonkit
-          key: taxonkit-taxdump-${{ runner.os }}-${{ hashFiles('**/run_pipeline_final.sh') }}
+          key: taxonkit-taxdump-v2-${{ runner.os }}-${{ hashFiles('**/run_pipeline_final.sh') }}
           restore-keys: |
-            taxonkit-taxdump-${{ runner.os }}-
+            taxonkit-taxdump-v2-${{ runner.os }}-
 
       - name: Prepare taxonkit taxonomy data
         run: |
@@ -111,9 +111,17 @@ jobs:
           TAXDUMP_URL="https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz"
           mkdir -p "$HOME/.taxonkit"
           
-          # 检查是否已经存在所有必需的 .dmp 文件
-          if [ -f "$HOME/.taxonkit/names.dmp" ] && [ -f "$HOME/.taxonkit/nodes.dmp" ] && [ -f "$HOME/.taxonkit/delnodes.dmp" ] && [ -f "$HOME/.taxonkit/merged.dmp" ]; then
-            echo "✅ taxdump 数据库已存在，跳过下载"
+          # 验证四个必需文件是否都存在
+          dmp_ok=true
+          for f in names.dmp nodes.dmp delnodes.dmp merged.dmp; do
+            if [ ! -f "$HOME/.taxonkit/$f" ]; then
+              echo "  缺少: $f"
+              dmp_ok=false
+            fi
+          done
+          
+          if [ "$dmp_ok" = true ]; then
+            echo "✅ taxdump 数据库已存在且完整，跳过下载"
             ls -lh "$HOME/.taxonkit"
           else
             echo "=== 下载 taxonkit taxdump 数据库 ==="
@@ -135,18 +143,29 @@ jobs:
               echo "ERROR: taxdump.tar.gz is empty or missing"
               exit 1
             fi
+            echo "✅ 下载成功 (大小: $(du -h taxdump.tar.gz | cut -f1))"
             
-            echo "✅ 下载成功，开始解压..."
             # 解压需要的四个 .dmp 文件到 ~/.taxonkit
-            tar -xzf taxdump.tar.gz -C "$HOME/.taxonkit" names.dmp nodes.dmp delnodes.dmp merged.dmp || {
+            echo "开始解压..."
+            tar -xzf taxdump.tar.gz --wildcards 'names.dmp' 'nodes.dmp' 'delnodes.dmp' 'merged.dmp' || {
               echo "Extraction failed. Listing archive contents:"
               tar -tzf taxdump.tar.gz | head -n 20 || true
               exit 1
             }
             
-            echo "=== 解压完成，已安装文件 ==="
+            # 再次验证所有必需文件
+            echo "=== 验证解压后的文件 ==="
+            for f in names.dmp nodes.dmp delnodes.dmp merged.dmp; do
+              if [ -f "$f" ]; then
+                echo "  ✅ $f ($(wc -c < $f) bytes)"
+              else
+                echo "  ❌ $f 未找到"
+                exit 1
+              fi
+            done
+            
+            echo "=== 解压完成 ==="
             ls -lh "$HOME/.taxonkit"
-            cd -
           fi
 
       # ------------------------------------------------------------------

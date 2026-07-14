@@ -130,6 +130,18 @@ fi
 
 log "环境检查通过，线程数: $THREADS"
 
+# 诊断信息
+log "=== 诊断: datasets CLI 信息 ==="
+datasets version 2>/dev/null || log "  datasets version 命令不可用"
+datasets --help 2>/dev/null | head -n 20 || log "  datasets --help 失败"
+log "=== 诊断: taxonkit 信息 ==="
+taxonkit version 2>/dev/null || log "  taxonkit version 命令不可用"
+
+# 设置 TAXONKIT 数据库目录
+mkdir -p ~/.taxonkit
+export TAXONKIT_DB=${TAXONKIT_DB:-~/.taxonkit}
+log "TAXONKIT_DB=$TAXONKIT_DB"
+
 # =============================================================================
 # 1. 生成 Python 脚本
 # =============================================================================

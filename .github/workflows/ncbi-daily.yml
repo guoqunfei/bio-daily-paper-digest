@@ -129,6 +129,7 @@ jobs:
       # ------------------------------------------------------------------
       - name: Collect results
         id: collect
+        if: always()
         run: |
           TODAY=$(date +%Y-%m-%d)
           RESULTS_SUBDIR="${RESULTS_DIR}/${TODAY}"
@@ -170,6 +171,7 @@ jobs:
       # 7. 上传 Artifact（保留 90 天）
       # ------------------------------------------------------------------
       - name: Upload artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ncbi-results-${{ steps.collect.outputs.today }}
@@ -179,6 +181,11 @@ jobs:
             NCBI_Eukaryota_Taxonomy_Summary.txt
             pipeline_*.log
             results/**/summary.txt
+            *.txt
+            *.tsv
+            *.jsonl
+            Eukaryota_nodes.txt
+            Eukaryota_species_taxids.txt
           retention-days: 90
           if-no-files-found: warn
 
@@ -186,6 +193,7 @@ jobs:
       # 8. 自动提交结果到仓库（git-auto-commit）
       # ------------------------------------------------------------------
       - name: Auto-commit results
+        if: success()
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "[NCBI Daily] ${{ steps.collect.outputs.today }} pipeline results"
@@ -273,7 +281,7 @@ jobs:
       # 11. 最终失败标记（仅当 pipeline 确实失败时）
       # ------------------------------------------------------------------
       - name: Mark as failed
-        if: failure() && steps.pipeline.outcome == 'failure'
+        if: failure() && (steps.pipeline.outcome == 'failure' || steps.pipeline.outcome == 'cancelled')
         run: |
           echo "Pipeline failed. Check logs for details."
           exit 1

@@ -143,6 +143,39 @@ mkdir -p "$TAXONKIT_HOME"
 export TAXONKIT_DB="$TAXONKIT_HOME"
 log "TAXONKIT_DB=$TAXONKIT_DB"
 
+# 验证 taxdump 文件是否有效，如果无效则重新下载
+log "=== 验证 taxonkit 数据库文件 ==="
+need_download=false
+for f in names.dmp nodes.dmp delnodes.dmp merged.dmp; do
+    if [ ! -s "$TAXONKIT_HOME/$f" ]; then
+        log "  文件缺失或为空: $f"
+        need_download=true
+    fi
+done
+
+if [ "$need_download" = true ]; then
+    log "正在重新下载 taxdump 数据库..."
+    cd "$TAXONKIT_HOME"
+    rm -f taxdump.tar.gz
+    TAXDUMP_URL="https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz"
+    if ! curl -fL --retry 5 --retry-delay 5 --max-time 300 -o taxdump.tar.gz "$TAXDUMP_URL"; then
+        log "curl 下载失败，尝试 wget..."
+        if ! wget --tries=5 --retry-connrefused --timeout=60 -q "$TAXDUMP_URL" -O taxdump.tar.gz; then
+            die "无法下载 taxdump 数据库"
+        fi
+    fi
+    if [ ! -s taxdump.tar.gz ]; then
+        die "下载的 taxdump.tar.gz 为空"
+    fi
+    log "下载完成，开始解压..."
+    tar -xzf taxdump.tar.gz || die "解压 taxdump 失败"
+    rm -f taxdump.tar.gz
+    log "解压完成"
+fi
+
+log "=== 验证完成 ==="
+ls -lh "$TAXONKIT_HOME"
+
 # =============================================================================
 # 1. 生成 Python 脚本
 # =============================================================================

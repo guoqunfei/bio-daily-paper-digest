@@ -455,6 +455,14 @@ if [[ "$needs_rebuild" == true ]]; then
     else
         log "  测试失败: taxonkit list --ids 1 错误:"
         log "  $(cat /tmp/test_err.txt)" || true
+        log "  尝试使用 taxonkit update 更新数据库..."
+        taxonkit update --data-dir "$TAXONKIT_DB" || true
+        log "  更新后重试..."
+        if taxonkit list --ids 1 --show-rank --indent "" --data-dir "$TAXONKIT_DB" > /tmp/test_nodes.txt 2>/tmp/test_err.txt; then
+            log "  重试成功: taxonkit list --ids 1 正常运行"
+        else
+            log "  重试失败: $(cat /tmp/test_err.txt)" || true
+        fi
     fi
     
     if ! taxonkit list --ids 2759 --show-rank --indent "" > Eukaryota_nodes.txt 2>taxonkit_list.err; then

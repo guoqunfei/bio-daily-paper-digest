@@ -22,6 +22,12 @@ env:
   TAXONKIT_VERSION: "0.20.0"
   DATASETS_VERSION: "16.38.1"
   RESULTS_DIR: "results"
+  SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+  SMTP_PORT: ${{ secrets.SMTP_PORT }}
+  SMTP_USER: ${{ secrets.SMTP_USER }}
+  SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+  EMAIL_TO: ${{ secrets.EMAIL_TO }}
+  EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
 
 jobs:
   ncbi-pipeline:
@@ -334,7 +340,7 @@ jobs:
       # 10. 发送失败邮件通知
       # ------------------------------------------------------------------
       - name: Send failure email
-        if: steps.pipeline.outcome == 'failure' && env.SMTP_SERVER != ''
+        if: failure() && env.SMTP_SERVER != ''
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_SERVER }}

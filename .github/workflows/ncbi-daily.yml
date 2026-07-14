@@ -188,7 +188,7 @@ jobs:
       # 8. 自动提交结果到仓库（git-auto-commit）
       # ------------------------------------------------------------------
       - name: Auto-commit results
-        uses: stefanzweif/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "[NCBI Daily] ${{ steps.collect.outputs.today }} pipeline results"
           file_pattern: |

@@ -431,6 +431,22 @@ fi
 if [[ "$needs_rebuild" == true ]]; then
     rm -f Eukaryota_nodes.txt
     log "  运行 taxonkit list --ids 2759 --show-rank --indent \"\" ..."
+    
+    # 诊断信息
+    log "  诊断: TAXONKIT_DB=$TAXONKIT_DB"
+    log "  诊断: 检查 .dmp 文件..."
+    for f in names.dmp nodes.dmp delnodes.dmp merged.dmp; do
+        if [ -f "$TAXONKIT_DB/$f" ]; then
+            log "    $f: $(wc -c < "$TAXONKIT_DB/$f") bytes, $(wc -l < "$TAXONKIT_DB/$f") lines"
+        else
+            log "    $f: 未找到"
+        fi
+    done
+    log "  诊断: 文件类型检查..."
+    file "$TAXONKIT_DB/names.dmp" || true
+    log "  诊断: names.dmp 前 200 字节..."
+    head -c 200 "$TAXONKIT_DB/names.dmp" | xxd | head -n 5 || true
+    
     if ! taxonkit list --ids 2759 --show-rank --indent "" > Eukaryota_nodes.txt 2>taxonkit_list.err; then
         log "  taxonkit list 错误日志："
         cat taxonkit_list.err >&2 || true

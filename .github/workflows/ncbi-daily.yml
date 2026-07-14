@@ -206,7 +206,7 @@ jobs:
             exit $EXIT_CODE
           }
         env:
-          TAXONKIT_DB: ~/.taxonkit
+          TAXONKIT_DB: ${{ github.home }}/.taxonkit
 
       # ------------------------------------------------------------------
       # 6. 收集结果和日志

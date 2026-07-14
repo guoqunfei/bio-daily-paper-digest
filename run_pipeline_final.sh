@@ -138,8 +138,9 @@ log "=== 诊断: taxonkit 信息 ==="
 taxonkit version 2>/dev/null || log "  taxonkit version 命令不可用"
 
 # 设置 TAXONKIT 数据库目录
-mkdir -p ~/.taxonkit
-export TAXONKIT_DB=${TAXONKIT_DB:-~/.taxonkit}
+TAXONKIT_HOME="${TAXONKIT_DB:-$HOME/.taxonkit}"
+mkdir -p "$TAXONKIT_HOME"
+export TAXONKIT_DB="$TAXONKIT_HOME"
 log "TAXONKIT_DB=$TAXONKIT_DB"
 
 # =============================================================================

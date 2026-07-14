@@ -121,7 +121,7 @@
              if-no-files-found: warn
 
          - name: Auto-commit results
-           uses: stefanzweif/git-auto-commit-action@v5
+           uses: stefanzweifel/git-auto-commit-action@v5
            with:
              commit_message: "[NCBI Daily] ${{ steps.collect.outputs.today }} pipeline results"
              file_pattern: |

@@ -105,29 +105,47 @@ jobs:
           restore-keys: |
             taxonkit-taxdump-${{ runner.os }}-
 
-      - name: Ensure taxdump exists
+      - name: Prepare taxonkit taxonomy data
         run: |
+          set -euo pipefail
+          TAXDUMP_URL="https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz"
+          mkdir -p "$HOME/.taxonkit"
+          
+          # 检查是否已经存在所有必需的 .dmp 文件
           if [ -f "$HOME/.taxonkit/names.dmp" ] && [ -f "$HOME/.taxonkit/nodes.dmp" ] && [ -f "$HOME/.taxonkit/delnodes.dmp" ] && [ -f "$HOME/.taxonkit/merged.dmp" ]; then
-            echo "taxdump 数据库已存在，跳过下载"
-            ls -lah ~/.taxonkit/
+            echo "✅ taxdump 数据库已存在，跳过下载"
+            ls -lh "$HOME/.taxonkit"
           else
             echo "=== 下载 taxonkit taxdump 数据库 ==="
-            mkdir -p ~/.taxonkit
-            cd ~/.taxonkit
+            cd "$HOME/.taxonkit"
             rm -f taxdump.tar.gz
-            if ! wget --tries=3 --timeout=120 -q https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz -O taxdump.tar.gz; then
-              echo "wget failed, trying curl..."
-              curl -L --retry 3 --max-time 120 -o taxdump.tar.gz https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz
+            
+            # 尝试下载 taxdump
+            if ! curl -fL --retry 3 --retry-delay 5 --max-time 120 -o taxdump.tar.gz "$TAXDUMP_URL"; then
+              echo "Primary download failed, trying ftp URL..."
+              if ! curl -fL --retry 3 --retry-delay 5 --max-time 120 -o taxdump.tar.gz "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz"; then
+                echo "ERROR: Failed to download taxdump.tar.gz"
+                ls -la || true
+                exit 1
+              fi
             fi
-            if [ -f "taxdump.tar.gz" ] && [ -s "taxdump.tar.gz" ]; then
-              tar -xzf taxdump.tar.gz
-              echo "taxdump files:"
-              ls -lah
-              echo "taxdump 数据库解压完成"
-            else
-              echo "ERROR: 无法下载 taxdump 数据库"
+            
+            # 验证文件大小
+            if [ ! -s taxdump.tar.gz ]; then
+              echo "ERROR: taxdump.tar.gz is empty or missing"
               exit 1
             fi
+            
+            echo "✅ 下载成功，开始解压..."
+            # 解压需要的四个 .dmp 文件到 ~/.taxonkit
+            tar -xzf taxdump.tar.gz -C "$HOME/.taxonkit" names.dmp nodes.dmp delnodes.dmp merged.dmp || {
+              echo "Extraction failed. Listing archive contents:"
+              tar -tzf taxdump.tar.gz | head -n 20 || true
+              exit 1
+            }
+            
+            echo "=== 解压完成，已安装文件 ==="
+            ls -lh "$HOME/.taxonkit"
             cd -
           fi
 

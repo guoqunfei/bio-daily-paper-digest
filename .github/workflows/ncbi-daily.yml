@@ -100,7 +100,7 @@ jobs:
         id: cache-taxdump
         uses: actions/cache@v4
         with:
-          path: ~/.taxonkit
+          path: $HOME/.taxonkit
           key: taxonkit-taxdump-v3-${{ runner.os }}-${{ hashFiles('**/run_pipeline_final.sh') }}
           restore-keys: |
             taxonkit-taxdump-v3-${{ runner.os }}-
@@ -109,6 +109,7 @@ jobs:
         run: |
           set -euo pipefail
           TAXDUMP_URL="https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz"
+          echo "HOME=$HOME"
           mkdir -p "$HOME/.taxonkit"
           cd "$HOME/.taxonkit"
           
@@ -130,11 +131,12 @@ jobs:
             rm -f taxdump.tar.gz
             
             # 尝试下载 taxdump
-            if ! curl -fL --retry 3 --retry-delay 5 --max-time 120 -o taxdump.tar.gz "$TAXDUMP_URL"; then
-              echo "Primary download failed, trying ftp URL..."
-              if ! curl -fL --retry 3 --retry-delay 5 --max-time 120 -o taxdump.tar.gz "ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz"; then
+            if ! curl -fL --retry 5 --retry-delay 5 --max-time 300 -o taxdump.tar.gz "$TAXDUMP_URL"; then
+              echo "curl failed, trying wget..."
+              if ! wget --tries=5 --retry-connrefused --timeout=60 -q "$TAXDUMP_URL" -O taxdump.tar.gz; then
                 echo "ERROR: Failed to download taxdump.tar.gz"
-                ls -la || true
+                echo "Listing $HOME contents for debugging:"
+                ls -la "$HOME" || true
                 exit 1
               fi
             fi
@@ -142,17 +144,18 @@ jobs:
             # 验证文件大小
             if [ ! -s taxdump.tar.gz ]; then
               echo "ERROR: taxdump.tar.gz is empty or missing"
+              ls -la "$HOME/.taxonkit" || true
               exit 1
             fi
             echo "✅ 下载成功 (大小: $(du -h taxdump.tar.gz | cut -f1))"
             
-            # 先查看压缩包内容
-            echo "=== 压缩包内容 ==="
-            tar -tzf taxdump.tar.gz | head -n 20
-            
-            # 解压所有文件到 ~/.taxonkit
+            # 解压需要的四个 .dmp 文件到 $HOME/.taxonkit
             echo "开始解压..."
-            tar -xzf taxdump.tar.gz
+            tar -xzf taxdump.tar.gz -C "$HOME/.taxonkit" --wildcards 'names.dmp' 'nodes.dmp' 'delnodes.dmp' 'merged.dmp' || {
+              echo "Extraction failed. Showing archive contents:"
+              tar -tzf taxdump.tar.gz | head -n 50 || true
+              exit 1
+            }
             
             # 再次验证所有必需文件
             echo "=== 验证解压后的文件 ==="
@@ -206,8 +209,6 @@ jobs:
             which datasets 2>/dev/null && datasets --help 2>&1 | head -n 5 || echo "datasets not available"
             exit $EXIT_CODE
           }
-        env:
-          TAXONKIT_DB: ${{ github.home }}/.taxonkit
 
       # ------------------------------------------------------------------
       # 6. 收集结果和日志

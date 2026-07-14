@@ -110,9 +110,25 @@ jobs:
         run: |
           echo "=== 下载 taxonkit taxdump 数据库 ==="
           mkdir -p ~/.taxonkit
-          taxonkit list --ids 1 --show-rank > /dev/null 2>&1 || true
-          # 预先生成缓存文件
-          ls -lah ~/.taxonkit/ 2>/dev/null || echo "taxdump 目录为空"
+          cd ~/.taxonkit
+          # 先清理旧文件
+          rm -f taxdump.tar.gz
+          # 下载 taxdump
+          if ! wget --tries=3 --timeout=120 -q https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz -O taxdump.tar.gz; then
+            echo "wget failed, trying curl..."
+            curl -L --retry 3 --max-time 120 -o taxdump.tar.gz https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz
+          fi
+          # 验证并解压
+          if [ -f "taxdump.tar.gz" ] && [ -s "taxdump.tar.gz" ]; then
+            tar -xzf taxdump.tar.gz
+            echo "taxdump files:"
+            ls -lah
+            echo "taxdump 数据库解压完成"
+          else
+            echo "ERROR: 无法下载 taxdump 数据库"
+            exit 1
+          fi
+          cd -
 
       # ------------------------------------------------------------------
       # 5. 运行主脚本

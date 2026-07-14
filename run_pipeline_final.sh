@@ -377,32 +377,9 @@ chmod +x fetch_with_timeout.py get_Eukaryota_Taxonomy_Summary.py generate_excel.
 log "辅助脚本已生成"
 
 # =============================================================================
-# 2. 确保 taxonkit taxdump 数据库已下载
+# 2. Taxonkit 获取物种列表
 # =============================================================================
-log "=== 2.1 检查并下载 taxonkit taxdump 数据库 ==="
-mkdir -p ~/.taxonkit
-cd ~/.taxonkit
-if [ ! -f "names.dmp" ] || [ ! -f "nodes.dmp" ]; then
-    log "  taxdump 数据库未找到，正在下载..."
-    wget --tries=3 --timeout=60 -q https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz -O taxdump.tar.gz || {
-        log "  wget 下载失败，尝试 curl..."
-        curl -L --max-time 60 -o taxdump.tar.gz https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz
-    }
-    if [ -f "taxdump.tar.gz" ] && [ -s "taxdump.tar.gz" ]; then
-        tar -xzf taxdump.tar.gz
-        log "  taxdump 数据库解压完成"
-    else
-        die "无法下载 taxdump 数据库"
-    fi
-else
-    log "  taxdump 数据库已存在"
-fi
-cd -
-
-# =============================================================================
-# 3. Taxonkit 获取物种列表
-# =============================================================================
-log "=== 3. 获取 Eukaryota 物种 TaxID ==="
+log "=== 2. 获取 Eukaryota 物种 TaxID ==="
 
 needs_rebuild=false
 if [[ ! -s Eukaryota_nodes.txt ]]; then

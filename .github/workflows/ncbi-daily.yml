@@ -290,7 +290,7 @@ jobs:
         continue-on-error: true
 
       # ------------------------------------------------------------------
-      # 9. 邮件成功通知（丰富统计 + 自动兼容 SSL/STARTTLS）
+      # 9. 邮件成功通知（丰富统计 + 多邮箱 + 单附件重命名）
       # ------------------------------------------------------------------
       - name: Send success email via Python
         if: steps.pipeline.outcome == 'success' && env.SMTP_SERVER != ''
@@ -298,11 +298,12 @@ jobs:
           python3 << 'PYEOF'
           import smtplib, os, ssl, glob
           from datetime import datetime, timedelta
-          from collections import defaultdict, Counter
+          from collections import Counter
           from email.mime.multipart import MIMEMultipart
           from email.mime.text import MIMEText
           from email.mime.application import MIMEApplication
           import pandas as pd
+          import numpy as np
           
           # ------------------------------------------------------------------
           # 配置读取
@@ -311,7 +312,7 @@ jobs:
           port     = int(os.environ['SMTP_PORT'])
           user     = os.environ['SMTP_USER']
           password = os.environ['SMTP_PASSWORD']
-          to       = os.environ['EMAIL_TO']
+          to_list  = [e.strip() for e in os.environ['EMAIL_TO'].split(',') if e.strip()]
           from_addr= os.environ['EMAIL_FROM']
           today_str= os.environ['TODAY']
           repo     = os.environ['GITHUB_REPO']
@@ -320,7 +321,7 @@ jobs:
           today = datetime.strptime(today_str, '%Y-%m-%d').date()
           
           # ------------------------------------------------------------------
-          # 读取当天数据
+          # 读取数据
           # ------------------------------------------------------------------
           raw_file = f"results/{today_str}/Eukaryota_assemblies_summary.xlsx"
           if not os.path.exists(raw_file):
@@ -329,15 +330,19 @@ jobs:
           df_raw = pd.read_excel(raw_file, sheet_name='All_Raw', dtype=str)
           df_unique = pd.read_excel(raw_file, sheet_name='Species_Unique', dtype=str)
           
-          # 解析日期
+          # 解析日期和数值
           df_raw['ReleaseDate'] = pd.to_datetime(df_raw['Assembly Release Date'], errors='coerce').dt.date
           df_raw['TaxID'] = df_raw['Taxonomic ID'].astype(str)
+          df_raw['SeqLen'] = pd.to_numeric(df_raw['Assembly Stats Total Sequence Length (bp)'], errors='coerce')
+          df_raw['GC'] = pd.to_numeric(df_raw['Assembly Stats GC Percent'], errors='coerce')
+          df_raw['ContigN50'] = pd.to_numeric(df_raw['Assembly Stats Contig N50 (bp)'], errors='coerce')
+          df_raw['ScaffoldN50'] = pd.to_numeric(df_raw['Assembly Stats Scaffold N50 (bp)'], errors='coerce')
           
           total_raw = len(df_raw)
           total_unique = len(df_unique)
           
           # ------------------------------------------------------------------
-          # 读取历史数据（构建历史物种集合）
+          # 读取历史数据
           # ------------------------------------------------------------------
           historical_taxids = set()
           history_files = glob.glob("results/*/Eukaryota_assemblies_summary.xlsx")
@@ -351,50 +356,83 @@ jobs:
                   pass
           
           # ------------------------------------------------------------------
-          # 按时间窗口统计
+          # 时间窗口统计
           # ------------------------------------------------------------------
           windows = [
-              ('今日', today, '#e8f5e9'),
-              ('本周', today - timedelta(days=7), '#f5f5f5'),
-              ('本月', today - timedelta(days=30), '#f5f5f5'),
-              ('本年', today - timedelta(days=365), '#f5f5f5'),
+              ('今日', today, '#e8f5e9', '#38a169'),
+              ('本周', today - timedelta(days=7), '#f7fafc', '#4a5568'),
+              ('本月', today - timedelta(days=30), '#f7fafc', '#4a5568'),
+              ('本年', today - timedelta(days=365), '#f7fafc', '#4a5568'),
           ]
           
           stats_rows = []
-          for name, start_date, color in windows:
+          for name, start_date, bg_color, text_color in windows:
               mask = df_raw['ReleaseDate'] >= start_date
               subset = df_raw[mask]
-              
               new_assemblies = len(subset)
               species_set = set(subset['TaxID'].dropna())
               num_species = len(species_set)
               first_time = len(species_set - historical_taxids)
-              
-              stats_rows.append((name, new_assemblies, num_species, first_time, color))
+              stats_rows.append((name, new_assemblies, num_species, first_time, bg_color, text_color))
           
           # ------------------------------------------------------------------
-          # 按 Kingdom 分布
+          # 组装质量统计
+          # ------------------------------------------------------------------
+          valid_n50 = df_raw['ContigN50'].dropna()
+          n50_median = valid_n50.median() if len(valid_n50) > 0 else 0
+          n50_max = valid_n50.max() if len(valid_n50) > 0 else 0
+          
+          valid_len = df_raw['SeqLen'].dropna()
+          avg_len = valid_len.mean() if len(valid_len) > 0 else 0
+          max_len = valid_len.max() if len(valid_len) > 0 else 0
+          
+          valid_gc = df_raw['GC'].dropna()
+          avg_gc = valid_gc.mean() if len(valid_gc) > 0 else 0
+          
+          # ------------------------------------------------------------------
+          # 分类群分布
           # ------------------------------------------------------------------
           kingdom_counts = Counter(df_raw['Subkingdom'].fillna('Unknown'))
           kingdom_html = ""
           for kingdom, count in kingdom_counts.most_common():
               pct = count / total_raw * 100
-              kingdom_html += f'<tr><td>{kingdom}</td><td>{count}</td><td>{pct:.1f}%</td></tr>'
+              bar_w = int(pct * 2)
+              kingdom_html += f'<tr><td>{kingdom}</td><td>{count:,}</td><td><div style="background:#4299e1; height:18px; width:{bar_w}px; display:inline-block; border-radius:3px;"></div> {pct:.1f}%</td></tr>'
           
           # ------------------------------------------------------------------
-          # 按 Assembly Level 分布
+          # 组装水平分布
           # ------------------------------------------------------------------
           level_counts = Counter(df_raw['Assembly Level'].fillna('Unknown'))
+          level_order = ['Chromosome', 'Scaffold', 'Contig', 'Complete Genome']
           level_html = ""
-          for level, count in level_counts.most_common():
-              pct = count / total_raw * 100
-              level_html += f'<tr><td>{level}</td><td>{count}</td><td>{pct:.1f}%</td></tr>'
+          for level in level_order:
+              if level in level_counts:
+                  count = level_counts[level]
+                  pct = count / total_raw * 100
+                  bar_w = int(pct * 2)
+                  level_html += f'<tr><td>{level}</td><td>{count:,}</td><td><div style="background:#48bb78; height:18px; width:{bar_w}px; display:inline-block; border-radius:3px;"></div> {pct:.1f}%</td></tr>'
+          # 补充其他未在列表中的
+          for level, count in level_counts.items():
+              if level not in level_order:
+                  pct = count / total_raw * 100
+                  bar_w = int(pct * 2)
+                  level_html += f'<tr><td>{level}</td><td>{count:,}</td><td><div style="background:#a0aec0; height:18px; width:{bar_w}px; display:inline-block; border-radius:3px;"></div> {pct:.1f}%</td></tr>'
           
           # ------------------------------------------------------------------
-          # 参考基因组统计
+          # 参考基因组
           # ------------------------------------------------------------------
           ref_genomes = df_raw[df_raw['RefSeq Category'].str.strip().str.lower() == 'reference genome']
           ref_count = len(ref_genomes)
+          
+          # ------------------------------------------------------------------
+          # 今日新增 Top 5 物种（按门/纲）
+          # ------------------------------------------------------------------
+          today_mask = df_raw['ReleaseDate'] == today
+          today_df = df_raw[today_mask]
+          top_phyla = Counter(today_df['Phylum'].fillna('Unknown')).most_common(5)
+          top_phyla_html = ""
+          for phylum, count in top_phyla:
+              top_phyla_html += f'<li>{phylum} <span style="color:#718096;">({count} 个)</span></li>'
           
           # ------------------------------------------------------------------
           # 生成 HTML 邮件
@@ -404,124 +442,152 @@ jobs:
           <head>
           <meta charset="UTF-8">
           <style>
-            body {{ font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }}
-            h2 {{ color: #2c5282; border-bottom: 3px solid #4299e1; padding-bottom: 10px; margin-top: 30px; }}
-            h3 {{ color: #2d3748; margin-top: 25px; font-size: 16px; }}
-            table {{ width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 14px; }}
-            th {{ background: #2c5282; color: white; padding: 12px 8px; text-align: left; font-weight: 600; }}
-            td {{ padding: 10px 8px; border-bottom: 1px solid #e2e8f0; }}
+            body {{ font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #2d3748; max-width: 720px; margin: 0 auto; padding: 24px; background: #f7fafc; }}
+            .container {{ background: white; border-radius: 12px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }}
+            h1 {{ color: #1a365d; font-size: 22px; margin: 0 0 8px 0; font-weight: 700; }}
+            .subtitle {{ color: #718096; font-size: 13px; margin-bottom: 24px; }}
+            .metric-grid {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 24px 0; }}
+            .metric-card {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; text-align: center; }}
+            .metric-card.green {{ background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); }}
+            .metric-card.purple {{ background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%); }}
+            .metric-value {{ font-size: 28px; font-weight: 700; margin: 4px 0; }}
+            .metric-label {{ font-size: 11px; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.8px; }}
+            h2 {{ color: #2d3748; font-size: 16px; margin: 28px 0 12px 0; padding-bottom: 8px; border-bottom: 2px solid #e2e8f0; }}
+            table {{ width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0; }}
+            th {{ background: #edf2f7; color: #4a5568; padding: 10px 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }}
+            td {{ padding: 10px 12px; border-bottom: 1px solid #edf2f7; }}
             tr:hover {{ background: #f7fafc; }}
-            .highlight {{ background: #c6f6d5; font-weight: 600; }}
-            .metric-card {{ background: #edf2f7; border-left: 4px solid #4299e1; padding: 15px; margin: 10px 0; border-radius: 4px; }}
-            .metric-value {{ font-size: 24px; font-weight: bold; color: #2c5282; }}
-            .metric-label {{ font-size: 12px; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; }}
-            .footer {{ margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #718096; }}
+            .badge {{ display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }}
+            .badge-new {{ background: #c6f6d5; color: #22543d; }}
+            .badge-first {{ background: #bee3f8; color: #2a4365; }}
+            .stats-row {{ display: flex; gap: 8px; align-items: center; }}
+            .mini-card {{ background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; flex: 1; text-align: center; }}
+            .mini-value {{ font-size: 20px; font-weight: 700; color: #2d3748; }}
+            .mini-label {{ font-size: 11px; color: #718096; margin-top: 4px; }}
+            .footer {{ margin-top: 32px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #a0aec0; text-align: center; }}
             a {{ color: #3182ce; text-decoration: none; }}
             a:hover {{ text-decoration: underline; }}
-            .badge {{ display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; }}
-            .badge-green {{ background: #c6f6d5; color: #22543d; }}
-            .badge-blue {{ background: #bee3f8; color: #2a4365; }}
-            .badge-purple {{ background: #e9d8fd; color: #553c9a; }}
+            .top-list {{ margin: 8px 0; padding-left: 20px; }}
+            .top-list li {{ padding: 4px 0; }}
+            .highlight-today {{ background: #f0fff4; border-left: 4px solid #48bb78; padding: 12px 16px; margin: 12px 0; border-radius: 0 8px 8px 0; }}
           </style>
           </head>
           <body>
+          <div class="container">
           
-          <h2>📊 NCBI 已发表真核生物基因组信息统计</h2>
-          <p style="color:#718096; font-size:14px;">统计日期：<strong>{today_str}</strong> | 数据来源：NCBI Datasets & Taxonomy</p>
+          <h1>📊 NCBI 已发表真核生物基因组信息统计</h1>
+          <div class="subtitle">统计日期：{today_str} &nbsp;|&nbsp; 数据来源：NCBI Assembly & Taxonomy</div>
           
-          <div style="display:flex; gap:15px; flex-wrap:wrap; margin:20px 0;">
-            <div class="metric-card" style="flex:1; min-width:150px;">
+          <div class="metric-grid">
+            <div class="metric-card">
               <div class="metric-label">累计发表基因组</div>
               <div class="metric-value">{total_raw:,}</div>
             </div>
-            <div class="metric-card" style="flex:1; min-width:150px; border-left-color:#48bb78;">
+            <div class="metric-card green">
               <div class="metric-label">去重后物种数</div>
               <div class="metric-value">{total_unique:,}</div>
             </div>
-            <div class="metric-card" style="flex:1; min-width:150px; border-left-color:#9f7aea;">
+            <div class="metric-card purple">
               <div class="metric-label">参考基因组</div>
               <div class="metric-value">{ref_count:,}</div>
-              <span class="badge badge-purple">RefSeq</span>
             </div>
           </div>
           
-          <h3>🆕 新增基因组统计</h3>
+          <h2>🆕 新增基因组动态</h2>
           <table>
             <tr>
-              <th style="width:15%">时间窗口</th>
-              <th style="width:25%">新增基因组数</th>
-              <th style="width:30%">覆盖物种数</th>
-              <th style="width:30%">首次发表物种数</th>
+              <th>时间窗口</th>
+              <th>新增基因组</th>
+              <th>覆盖物种</th>
+              <th>首次发表物种</th>
             </tr>
           """
           
-          for name, assemblies, species, first_time, color in stats_rows:
+          for name, assemblies, species, first_time, bg_color, text_color in stats_rows:
               html += f"""
-            <tr style="background:{color};">
+            <tr>
               <td><strong>{name}</strong></td>
-              <td>{assemblies:,} <span class="badge badge-green">+{assemblies}</span></td>
+              <td>{assemblies:,} <span class="badge badge-new">+{assemblies}</span></td>
               <td>{species:,}</td>
-              <td>{first_time:,} <span class="badge badge-blue">首报</span></td>
+              <td>{first_time:,} <span class="badge badge-first">首报</span></td>
             </tr>
           """
           
           html += f"""
           </table>
-          <p style="font-size:12px; color:#718096;">💡 <em>"首次发表物种"指该物种在 NCBI 历史上首次出现基因组组装记录。</em></p>
+          <div class="highlight-today">
+            <strong>💡 说明：</strong>\"首次发表物种\"指该物种在 NCBI 历史上首次出现基因组组装记录。
+          </div>
           
-          <h3>🧬 分类群分布（Kingdom）</h3>
+          <h2>🧬 分类群分布</h2>
           <table>
             <tr><th>分类群</th><th>基因组数</th><th>占比</th></tr>
             {kingdom_html}
           </table>
           
-          <h3>🔬 组装水平分布（Assembly Level）</h3>
+          <h2>🔬 组装水平分布</h2>
           <table>
             <tr><th>组装水平</th><th>基因组数</th><th>占比</th></tr>
             {level_html}
           </table>
           
-          <h3>📁 结果文件</h3>
-          <ul>
-            <li><a href="https://github.com/{repo}/blob/main/results/{today_str}/Eukaryota_assemblies_summary.xlsx">Eukaryota_assemblies_summary.xlsx</a> — 全部基因组记录（All_Raw + Species_Unique 双 Sheet）</li>
-            <li><a href="https://github.com/{repo}/blob/main/results/{today_str}/NCBI_Eukaryota_Taxonomy_Summary.xlsx">NCBI_Eukaryota_Taxonomy_Summary.xlsx</a> — 门/纲宏观统计</li>
-          </ul>
-          
-          <h3>🔗 快速链接</h3>
-          <p>
-            <a href="https://github.com/{repo}/actions/runs/{run_id}">📋 查看 Actions 运行详情</a> &nbsp;|&nbsp;
-            <a href="https://github.com/{repo}/actions/runs/{run_id}/artifacts">📦 下载 Artifact</a> &nbsp;|&nbsp;
-            <a href="https://github.com/{repo}/tree/main/results/{today_str}">📂 浏览结果目录</a>
-          </p>
-          
-          <div class="footer">
-            <p>此邮件由 GitHub Actions 自动发送 | 仓库：{repo} | Run ID：{run_id}</p>
-            <p>如有问题，请在仓库中提交 Issue 或联系管理员。</p>
+          <h2>📏 组装质量概览</h2>
+          <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 12px 0;">
+            <div class="mini-card">
+              <div class="mini-value">{avg_len/1e9:.2f}</div>
+              <div class="mini-label">平均基因组大小 (Gb)</div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-value">{max_len/1e9:.2f}</div>
+              <div class="mini-label">最大基因组 (Gb)</div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-value">{avg_gc:.1f}%</div>
+              <div class="mini-label">平均 GC 含量</div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-value">{n50_median/1e6:.2f}</div>
+              <div class="mini-label">Contig N50 中位数 (Mb)</div>
+            </div>
           </div>
           
+          <h2>🌱 今日新增 Top 分类群</h2>
+          <ul class="top-list">
+            {top_phyla_html if top_phyla_html else '<li style="color:#718096;">今日无新增基因组</li>'}
+          </ul>
+          
+          <div class="footer">
+            <p>此邮件由 GitHub Actions 自动发送 &nbsp;|&nbsp; 仓库：{repo} &nbsp;|&nbsp; Run ID：{run_id}</p>
+            <p><a href="https://github.com/{repo}/actions/runs/{run_id}">查看运行详情</a> &nbsp;|&nbsp; <a href="https://github.com/{repo}/actions/runs/{run_id}/artifacts">下载 Artifact</a></p>
+          </div>
+          
+          </div>
           </body>
           </html>
           """
           
           # ------------------------------------------------------------------
-          # 构造邮件并发送
+          # 构造邮件
           # ------------------------------------------------------------------
           msg = MIMEMultipart()
           msg['From'] = from_addr
-          msg['To'] = to
+          msg['To'] = ', '.join(to_list)
           msg['Subject'] = f'{today_str} | NCBI已发表真核生物基因组信息统计'
           msg.attach(MIMEText(html, 'html', 'utf-8'))
           
-          # 附件
-          for fname in [f"results/{today_str}/Eukaryota_assemblies_summary.xlsx",
-                        f"results/{today_str}/NCBI_Eukaryota_Taxonomy_Summary.xlsx"]:
-              if os.path.exists(fname):
-                  with open(fname, 'rb') as f:
-                      att = MIMEApplication(f.read(), Name=os.path.basename(fname))
-                      att['Content-Disposition'] = f'attachment; filename="{os.path.basename(fname)}"'
-                      msg.attach(att)
+          # 附件：只发一个，重命名
+          attach_src = f"results/{today_str}/Eukaryota_assemblies_summary.xlsx"
+          if not os.path.exists(attach_src):
+              attach_src = "Eukaryota_assemblies_summary.xlsx"
           
-          # 自动适配 SSL/STARTTLS
+          if os.path.exists(attach_src):
+              attach_name = f"NCBI真核生物发表基因组{today_str.replace('-', '')}.xlsx"
+              with open(attach_src, 'rb') as f:
+                  att = MIMEApplication(f.read(), Name=attach_name)
+                  att['Content-Disposition'] = f'attachment; filename="{attach_name}"'
+                  msg.attach(att)
+          
+          # 发送
           s = None
           try:
               s = smtplib.SMTP_SSL(server, port, timeout=30)
@@ -530,9 +596,9 @@ jobs:
               s.starttls()
           
           s.login(user, password)
-          s.sendmail(from_addr, [to], msg.as_string())
+          s.sendmail(from_addr, to_list, msg.as_string())
           s.quit()
-          print("✅ 邮件发送成功")
+          print(f"✅ 邮件发送成功，收件人 {len(to_list)} 人：{', '.join(to_list)}")
           PYEOF
         env:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
@@ -560,7 +626,7 @@ jobs:
           port     = int(os.environ['SMTP_PORT'])
           user     = os.environ['SMTP_USER']
           password = os.environ['SMTP_PASSWORD']
-          to       = os.environ['EMAIL_TO']
+          to_list  = [e.strip() for e in os.environ['EMAIL_TO'].split(',') if e.strip()]
           from_addr= os.environ['EMAIL_FROM']
           today    = os.environ['TODAY']
           repo     = os.environ['GITHUB_REPO']
@@ -568,7 +634,7 @@ jobs:
           
           msg = MIMEMultipart()
           msg['From'] = from_addr
-          msg['To'] = to
+          msg['To'] = ', '.join(to_list)
           msg['Subject'] = f'{today} | NCBI基因组统计 — 运行失败告警'
           
           body = f"""<!DOCTYPE html>
@@ -593,9 +659,9 @@ jobs:
               s.starttls()
           
           s.login(user, password)
-          s.sendmail(from_addr, [to], msg.as_string())
+          s.sendmail(from_addr, to_list, msg.as_string())
           s.quit()
-          print("✅ 告警邮件发送成功")
+          print(f"✅ 告警邮件发送成功，收件人 {len(to_list)} 人")
           PYEOF
         env:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}

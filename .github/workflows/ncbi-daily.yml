@@ -1,0 +1,278 @@
+name: NCBI Eukaryota Daily Pipeline
+
+on:
+  schedule:
+    # 每天北京时间 10:00 (UTC 02:00)
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: '强制重新构建（忽略缓存）'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+env:
+  TAXONKIT_VERSION: "0.15.1"
+  DATASETS_VERSION: "16.38.1"
+  RESULTS_DIR: "results"
+
+jobs:
+  ncbi-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      actions: write
+
+    steps:
+      # ------------------------------------------------------------------
+      # 1. 检出代码
+      # ------------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ------------------------------------------------------------------
+      # 2. 安装系统依赖 (taxonkit, NCBI datasets CLI, jq)
+      # ------------------------------------------------------------------
+      - name: Install jq, wget, unzip
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq jq wget unzip curl
+
+      - name: Install taxonkit
+        run: |
+          TAXONKIT_URL="https://github.com/shenwei356/taxonkit/releases/download/v${TAXONKIT_VERSION}/taxonkit_${TAXONKIT_VERSION}_linux_amd64.tar.gz"
+          echo "Downloading taxonkit from: $TAXONKIT_URL"
+          # 尝试 wget（带重试），失败则用 curl 备用
+          if ! wget --tries=3 --retry-connrefused --timeout=30 -q "$TAXONKIT_URL" -O taxonkit.tar.gz; then
+            echo "wget failed, trying curl..."
+            curl -L --retry 3 --max-time 30 -o taxonkit.tar.gz "$TAXONKIT_URL"
+          fi
+          # 验证文件
+          if [ ! -s taxonkit.tar.gz ]; then
+            echo "ERROR: Failed to download taxonkit"
+            exit 1
+          fi
+          tar -xzf taxonkit.tar.gz
+          sudo mv taxonkit /usr/local/bin/
+          sudo chmod +x /usr/local/bin/taxonkit
+          taxonkit version
+
+      - name: Install NCBI datasets CLI
+        run: |
+          NCBI_URL="https://ftp.ncbi.nlm.nih.gov/pub/datasets/command-line/LATEST/linux-amd64.datasets.package.zip"
+          echo "Downloading NCBI datasets CLI from: $NCBI_URL"
+          if ! wget --tries=3 --retry-connrefused --timeout=30 -q "$NCBI_URL" -O datasets.zip; then
+            echo "wget failed, trying curl..."
+            curl -L --retry 3 --max-time 30 -o datasets.zip "$NCBI_URL"
+          fi
+          if [ ! -s datasets.zip ]; then
+            echo "ERROR: Failed to download NCBI datasets CLI"
+            exit 1
+          fi
+          unzip -q -o datasets.zip
+          sudo mv datasets /usr/local/bin/
+          sudo chmod +x /usr/local/bin/datasets
+          datasets version
+
+      # ------------------------------------------------------------------
+      # 3. 配置 Python 环境
+      # ------------------------------------------------------------------
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python packages
+        run: |
+          pip install --quiet pandas openpyxl
+
+      # ------------------------------------------------------------------
+      # 4. 缓存 taxonkit taxdump 数据库 (~1GB)
+      # ------------------------------------------------------------------
+      - name: Cache taxonkit taxdump
+        id: cache-taxdump
+        uses: actions/cache@v4
+        with:
+          path: ~/.taxonkit
+          key: taxonkit-taxdump-${{ runner.os }}-${{ hashFiles('**/run_pipeline_final.sh') }}
+          restore-keys: |
+            taxonkit-taxdump-${{ runner.os }}-
+
+      - name: Download taxdump if not cached
+        if: steps.cache-taxdump.outputs.cache-hit != 'true'
+        run: |
+          echo "=== 下载 taxonkit taxdump 数据库 ==="
+          mkdir -p ~/.taxonkit
+          taxonkit list --ids 1 --show-rank > /dev/null 2>&1 || true
+          # 预先生成缓存文件
+          ls -lah ~/.taxonkit/ 2>/dev/null || echo "taxdump 目录为空"
+
+      # ------------------------------------------------------------------
+      # 5. 运行主脚本
+      # ------------------------------------------------------------------
+      - name: Run NCBI pipeline
+        id: pipeline
+        run: |
+          bash run_pipeline_final.sh
+        continue-on-error: true
+        env:
+          TAXONKIT_DB: ~/.taxonkit
+
+      # ------------------------------------------------------------------
+      # 6. 收集结果和日志
+      # ------------------------------------------------------------------
+      - name: Collect results
+        id: collect
+        run: |
+          TODAY=$(date +%Y-%m-%d)
+          RESULTS_SUBDIR="${RESULTS_DIR}/${TODAY}"
+          mkdir -p "${RESULTS_SUBDIR}"
+
+          # 复制结果文件
+          cp -f Eukaryota_assemblies_summary.xlsx "${RESULTS_SUBDIR}/" 2>/dev/null || true
+          cp -f NCBI_Eukaryota_Taxonomy_Summary.xlsx "${RESULTS_SUBDIR}/" 2>/dev/null || true
+          cp -f NCBI_Eukaryota_Taxonomy_Summary.txt "${RESULTS_SUBDIR}/" 2>/dev/null || true
+          cp -f pipeline_*.log "${RESULTS_SUBDIR}/" 2>/dev/null || true
+
+          # 生成运行摘要
+          STATS_FILE="${RESULTS_SUBDIR}/summary.txt"
+          echo "NCBI Eukaryota Pipeline Daily Report - ${TODAY}" > "${STATS_FILE}"
+          echo "================================================" >> "${STATS_FILE}"
+          echo "Run Date: ${TODAY}" >> "${STATS_FILE}"
+          echo "Run ID: ${{ github.run_id }}" >> "${STATS_FILE}"
+          echo "Actor: ${{ github.actor }}" >> "${STATS_FILE}"
+          echo "" >> "${STATS_FILE}"
+
+          if [ -f "Eukaryota_assemblies_stats.tsv" ]; then
+            ASM_COUNT=$(wc -l < Eukaryota_assemblies_stats.tsv 2>/dev/null || echo 0)
+            echo "Assembly Records: ${ASM_COUNT}" >> "${STATS_FILE}"
+          fi
+
+          if [ -f "NCBI_Eukaryota_Taxonomy_Summary.txt" ]; then
+            TAX_COUNT=$(tail -n +2 NCBI_Eukaryota_Taxonomy_Summary.txt | wc -l 2>/dev/null || echo 0)
+            echo "Taxonomy Summary Records: ${TAX_COUNT}" >> "${STATS_FILE}"
+          fi
+
+          echo "" >> "${STATS_FILE}"
+          echo "Artifacts:" >> "${STATS_FILE}"
+          ls -lh "${RESULTS_SUBDIR}/" >> "${STATS_FILE}"
+
+          echo "results_dir=${RESULTS_SUBDIR}" >> $GITHUB_OUTPUT
+          echo "today=${TODAY}" >> $GITHUB_OUTPUT
+
+      # ------------------------------------------------------------------
+      # 7. 上传 Artifact（保留 90 天）
+      # ------------------------------------------------------------------
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ncbi-results-${{ steps.collect.outputs.today }}
+          path: |
+            Eukaryota_assemblies_summary.xlsx
+            NCBI_Eukaryota_Taxonomy_Summary.xlsx
+            NCBI_Eukaryota_Taxonomy_Summary.txt
+            pipeline_*.log
+            results/**/summary.txt
+          retention-days: 90
+          if-no-files-found: warn
+
+      # ------------------------------------------------------------------
+      # 8. 自动提交结果到仓库（git-auto-commit）
+      # ------------------------------------------------------------------
+      - name: Auto-commit results
+        uses: stefanzweif/git-auto-commit-action@v5
+        with:
+          commit_message: "[NCBI Daily] ${{ steps.collect.outputs.today }} pipeline results"
+          file_pattern: |
+            results/**/*.xlsx
+            results/**/*.txt
+            results/**/*.log
+          branch: main
+        continue-on-error: true
+
+      # ------------------------------------------------------------------
+      # 9. 发送成功邮件通知
+      # ------------------------------------------------------------------
+      - name: Send success email
+        if: steps.pipeline.outcome == 'success'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USER }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: '[NCBI Daily] ${{ steps.collect.outputs.today }} 基因组摘要统计完成'
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_FROM }}
+          html_body: |
+            <h2>✅ NCBI Eukaryota 每日统计完成</h2>
+            <p><strong>日期：</strong>${{ steps.collect.outputs.today }}</p>
+            <p><strong>状态：</strong>成功</p>
+            <hr>
+            <h3>运行信息</h3>
+            <ul>
+              <li>GitHub Actions Run ID: <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}">${{ github.run_id }}</a></li>
+              <li>Repository: ${{ github.repository }}</li>
+              <li>Actor: ${{ github.actor }}</li>
+            </ul>
+            <hr>
+            <h3>结果文件</h3>
+            <ul>
+              <li><a href="https://github.com/${{ github.repository }}/blob/main/results/${{ steps.collect.outputs.today }}/Eukaryota_assemblies_summary.xlsx">Eukaryota_assemblies_summary.xlsx</a></li>
+              <li><a href="https://github.com/${{ github.repository }}/blob/main/results/${{ steps.collect.outputs.today }}/NCBI_Eukaryota_Taxonomy_Summary.xlsx">NCBI_Eukaryota_Taxonomy_Summary.xlsx</a></li>
+              <li><a href="https://github.com/${{ github.repository }}/blob/main/results/${{ steps.collect.outputs.today }}/NCBI_Eukaryota_Taxonomy_Summary.txt">NCBI_Eukaryota_Taxonomy_Summary.txt</a></li>
+            </ul>
+            <hr>
+            <h3>Artifact 下载</h3>
+            <p>请在 Actions 页面下载完整结果：</p>
+            <p><a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}">点击查看运行详情和下载 Artifact</a></p>
+          attachments: |
+            results/${{ steps.collect.outputs.today }}/Eukaryota_assemblies_summary.xlsx
+            results/${{ steps.collect.outputs.today }}/NCBI_Eukaryota_Taxonomy_Summary.xlsx
+
+      # ------------------------------------------------------------------
+      # 10. 发送失败邮件通知
+      # ------------------------------------------------------------------
+      - name: Send failure email
+        if: steps.pipeline.outcome == 'failure'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USER }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: '[NCBI Daily ERROR] ${{ steps.collect.outputs.today }} 运行失败'
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_FROM }}
+          html_body: |
+            <h2>❌ NCBI Eukaryota 每日统计失败</h2>
+            <p><strong>日期：</strong>${{ steps.collect.outputs.today }}</p>
+            <p><strong>状态：</strong>失败</p>
+            <hr>
+            <h3>错误信息</h3>
+            <p>Pipeline 步骤执行失败，请查看详细日志：</p>
+            <p><a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}">点击查看 Actions 日志</a></p>
+            <hr>
+            <h3>调试建议</h3>
+            <ol>
+              <li>点击上方链接查看完整日志</li>
+              <li>检查 NCBI datasets API 是否可用</li>
+              <li>检查 taxonkit 数据库是否下载成功</li>
+              <li>尝试手动触发 workflow_dispatch 重试运行</li>
+            </ol>
+            <hr>
+            <p><small>此邮件由 GitHub Actions 自动发送</small></p>
+
+      # ------------------------------------------------------------------
+      # 11. 最终失败标记
+      # ------------------------------------------------------------------
+      - name: Mark as failed
+        if: steps.pipeline.outcome == 'failure'
+        run: |
+          echo "Pipeline failed. Check logs for details."
+          exit 1

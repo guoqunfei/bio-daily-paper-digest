@@ -403,7 +403,7 @@ log "  lineage: $(wc -l < Eukaryota_taxonomy.tsv) 条"
 # 4. 分类汇总
 # =============================================================================
 log "=== 4. 汇总分类统计 ==="
-python3.9 get_Eukaryota_Taxonomy_Summary.py || die "分类汇总失败"
+python3 get_Eukaryota_Taxonomy_Summary.py || die "分类汇总失败"
 
 # =============================================================================
 # 5. 并行下载 NCBI 基因组摘要（核心修复：用 xargs -P 替代 & + wait）

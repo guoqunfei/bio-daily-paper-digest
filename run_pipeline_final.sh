@@ -353,9 +353,32 @@ chmod +x fetch_with_timeout.py get_Eukaryota_Taxonomy_Summary.py generate_excel.
 log "辅助脚本已生成"
 
 # =============================================================================
-# 2. Taxonkit 获取物种列表
+# 2. 确保 taxonkit taxdump 数据库已下载
 # =============================================================================
-log "=== 2. 获取 Eukaryota 物种 TaxID ==="
+log "=== 2.1 检查并下载 taxonkit taxdump 数据库 ==="
+mkdir -p ~/.taxonkit
+cd ~/.taxonkit
+if [ ! -f "names.dmp" ] || [ ! -f "nodes.dmp" ]; then
+    log "  taxdump 数据库未找到，正在下载..."
+    wget --tries=3 --timeout=60 -q https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz -O taxdump.tar.gz || {
+        log "  wget 下载失败，尝试 curl..."
+        curl -L --max-time 60 -o taxdump.tar.gz https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump.tar.gz
+    }
+    if [ -f "taxdump.tar.gz" ] && [ -s "taxdump.tar.gz" ]; then
+        tar -xzf taxdump.tar.gz
+        log "  taxdump 数据库解压完成"
+    else
+        die "无法下载 taxdump 数据库"
+    fi
+else
+    log "  taxdump 数据库已存在"
+fi
+cd -
+
+# =============================================================================
+# 3. Taxonkit 获取物种列表
+# =============================================================================
+log "=== 3. 获取 Eukaryota 物种 TaxID ==="
 
 needs_rebuild=false
 if [[ ! -s Eukaryota_nodes.txt ]]; then
@@ -400,9 +423,9 @@ fi
 log "  提取物种 TaxID: $species_count 条"
 
 # =============================================================================
-# 3. 构建分类 lineage
+# 4. 构建分类 lineage
 # =============================================================================
-log "=== 3. 构建分类 lineage ==="
+log "=== 4. 构建分类 lineage ==="
 if [[ ! -s Eukaryota_taxonomy.tsv ]] || [[ "$needs_rebuild" == true ]]; then
     rm -f Eukaryota_taxonomy.tsv
     taxonkit lineage --threads "$THREADS" Eukaryota_species_taxids.txt 2>/dev/null \
@@ -412,15 +435,15 @@ fi
 log "  lineage: $(wc -l < Eukaryota_taxonomy.tsv) 条"
 
 # =============================================================================
-# 4. 分类汇总
+# 5. 分类汇总
 # =============================================================================
-log "=== 4. 汇总分类统计 ==="
+log "=== 5. 汇总分类统计 ==="
 python3 get_Eukaryota_Taxonomy_Summary.py || die "分类汇总失败"
 
 # =============================================================================
-# 5. 并行下载 NCBI 基因组摘要（核心修复：用 xargs -P 替代 & + wait）
+# 6. 并行下载 NCBI 基因组摘要（核心修复：用 xargs -P 替代 & + wait）
 # =============================================================================
-log "=== 5. 并行下载 NCBI 基因组摘要 ==="
+log "=== 6. 并行下载 NCBI 基因组摘要 ==="
 
 # 创建下载任务列表文件
 cat > download_tasks.txt << 'EOF'
@@ -464,9 +487,9 @@ done < download_tasks.txt
 log "  下载完成"
 
 # =============================================================================
-# 6. 合并 JSONL
+# 7. 合并 JSONL
 # =============================================================================
-log "=== 6. 合并 JSONL ==="
+log "=== 7. 合并 JSONL ==="
 cat SAR_assemblies.jsonl Amoebozoa_assemblies.jsonl Metamonada_assemblies.jsonl \
     Euglenozoa_assemblies.jsonl Fornicata_assemblies.jsonl Cryptophyta_assemblies.jsonl \
     Haptista_assemblies.jsonl Apusozoa_assemblies.jsonl > Protists_assemblies.jsonl
@@ -475,9 +498,9 @@ cat Metaoza_assemblies.jsonl Viridiplantae_assemblies.jsonl Fungi_assemblies.jso
 log "  总记录: $(wc -l < Eukaryota_assemblies.jsonl) 行"
 
 # =============================================================================
-# 7. 提取 Assembly 统计
+# 8. 提取 Assembly 统计
 # =============================================================================
-log "=== 7. 提取 Assembly 统计 ==="
+log "=== 8. 提取 Assembly 统计 ==="
 {
     echo -e "Assembly Accession\tTaxonomic ID\tAssembly Name\tAssembly Level\tRefSeq Category\tIs Atypical\tAtypical Warnings\tAssembly Stats Total Sequence Length (bp)\tAssembly Stats Total Number of Chromosomes\tAssembly Stats Number of Contigs\tAssembly Stats Contig N50 (bp)\tAssembly Stats Number of Scaffolds\tAssembly Stats Scaffold N50 (bp)\tAssembly Stats GC Percent\tAssembly Release Date\tAssembly Sequencing Tech"
     jq -r '
@@ -502,13 +525,13 @@ log "=== 7. 提取 Assembly 统计 ==="
 log "  提取到 $(wc -l < Eukaryota_assemblies_stats.tsv) 条唯一记录"
 
 # =============================================================================
-# 8. 生成格式化 Excel（双 Sheet）
+# 9. 生成格式化 Excel（双 Sheet）
 # =============================================================================
-log "=== 8. 生成格式化 Excel ==="
+log "=== 9. 生成格式化 Excel ==="
 python3 generate_excel.py || die "Excel 生成失败"
 
 # =============================================================================
-# 9. 完成
+# 10. 完成
 # =============================================================================
 log "=== ✅ 流程全部完成 ==="
 log "输出文件："

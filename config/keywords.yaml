@@ -1,0 +1,50 @@
+# Bio Daily Paper Digest - Keyword Configuration
+# 独立关键词配置文件（可被 settings.yaml 引用或覆盖）
+
+keywords:
+  # 核心基因组学
+  - "structural variation"
+  - "genome assembly"
+  - "genome annotation"
+  - "comparative genomics"
+  - "functional genomics"
+
+  # 测序技术
+  - "long-read sequencing"
+  - "PacBio"
+  - "Oxford Nanopore"
+  - "HiFi reads"
+  - "short-read sequencing"
+
+  # 三维基因组
+  - "Hi-C"
+  - "chromatin conformation"
+  - "TAD"
+  - "promoter-enhancer"
+  - "3D genome"
+
+  # 变异检测
+  - "SNP calling"
+  - "indel"
+  - "copy number variation"
+  - "population genomics"
+  - "GWAS"
+
+  # 单细胞
+  - "single-cell RNA-seq"
+  - "scRNA-seq"
+  - "single-cell genomics"
+  - "cell atlas"
+
+  # 计算生物学
+  - "bioinformatics pipeline"
+  - "genome browser"
+  - "variant annotation"
+  - "phylogenomics"
+
+  # 新兴技术
+  - "CRISPR"
+  - "gene editing"
+  - "synthetic biology"
+  - "metagenomics"
+  - "microbiome"

@@ -1,10 +1,11 @@
-# Bio Daily Paper Digest Configuration
-# 每日文献综述配置文件
+# Bio Daily Paper Digest - Main Configuration
+# 主配置文件
 
 search:
   sources:
     - arxiv
     - pubmed
+    - biorxiv
   keywords:
     - "structural variation"
     - "genome assembly"
@@ -19,7 +20,36 @@ digest:
   language: "zh"
   style: "academic"
   max_abstract_length: 500
+  use_llm: true
+  llm_max_papers: 15
+
+llm:
+  api_key: ""           # Override via OPENAI_API_KEY env
+  base_url: "https://api.openai.com/v1"
+  model: "gpt-4o-mini"
+  temperature: 0.3
+  max_tokens: 800
 
 email:
+  smtp_server: ""       # Override via SMTP_SERVER env
+  smtp_port: 25
+  smtp_user: ""         # Override via SMTP_USER env
+  smtp_password: ""     # Override via SMTP_PASSWORD env
+  receivers: []         # Override via EMAIL_RECEIVER env
   subject_template: "[Bio-Digest] {date} Literature Digest ({count} papers)"
   send_time: "09:00"
+
+github:
+  feedback_enabled: true
+  create_issues: true
+  issue_labels:
+    - "automated"
+    - "daily-digest"
+
+dedup:
+  enabled: true
+  similarity_threshold: 0.85
+  strategies:
+    - "hash"
+    - "doi"
+    - "similarity"

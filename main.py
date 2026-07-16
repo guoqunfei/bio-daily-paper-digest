@@ -25,6 +25,7 @@ from scripts.github_feedback import get_feedback
 from scripts.email_sender import get_sender
 from scripts.user_preferences import get_preferences
 from scripts.follow_up import get_follow_up_manager
+from scripts.team_sync import get_team_sync
 
 
 # 配置常量
@@ -41,6 +42,7 @@ def run_daily():
         # Initialize feedback loop components
         preferences = get_preferences()
         follow_up_manager = get_follow_up_manager()
+        team_sync = get_team_sync()
         
         # Print preference stats
         stats = preferences.get_stats()
@@ -90,7 +92,13 @@ def run_daily():
         
         print(f"[{today}] Preference filter: {ignored_count} ignored, {read_count} already read, {len(filtered_by_prefs)} remaining")
         
-        # 5. Apply daily limit
+        # 6. Apply location bias (team-specific differentiation)
+        # For now, apply a generic location bias if configured
+        # In production, you'd get member location from config and apply per-person
+        filtered_by_prefs = team_sync.apply_location_bias(filtered_by_prefs, "shenzhen")
+        print(f"[{today}] Location bias applied")
+        
+        # 7. Apply daily limit
         limited_papers = filtered_by_prefs[:MAX_DAILY_PAPERS]
         if len(filtered_by_prefs) > MAX_DAILY_PAPERS:
             print(f"[{today}] Limited to top {MAX_DAILY_PAPERS} papers (from {len(filtered_by_prefs)})")
@@ -194,10 +202,19 @@ def run_daily():
         with open(data_path, "w", encoding="utf-8") as f:
             json.dump(limited_papers, f, ensure_ascii=False, indent=2)
         print(f"[{today}] Paper data saved: {data_path}")
+        
+        # Generate team daily report
+        team_report = team_sync.generate_team_daily_report(limited_papers)
+        if team_report:
+            team_report_path = f"output/{today}_team_report.md"
+            with open(team_report_path, "w", encoding="utf-8") as f:
+                f.write(team_report)
+            print(f"[{today}] Team report saved: {team_report_path}")
 
-        # 7. Send email
+        # 7. Send email with follow-up reminders
+        follow_up_html = follow_up_manager.generate_email_reminder_html()
         sender = get_sender()
-        sender.send_digest(digest_path, len(limited_papers))
+        sender.send_digest(digest_path, len(limited_papers), follow_up_html=follow_up_html)
 
         # 8. GitHub feedback
         feedback = get_feedback()

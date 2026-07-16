@@ -1,0 +1,129 @@
+# Team Configuration - 团队配置
+# 支持多团队、多研究方向、差异化推送
+
+# 默认团队（如果没有指定团队，使用默认配置）
+default_team:
+  name: "默认团队"
+  members:
+    - email: "leader@example.com"
+      name: "团队负责人"
+      role: "PI"
+      interests: ["structural variation", "genome assembly"]
+
+# 团队列表
+teams:
+  - id: "assembly-team"
+    name: "基因组组装组"
+    focus:
+      - "genome assembly"
+      - "scaffolding"
+      - "Hi-C"
+      - "chromosome conformation"
+      - "hifiasm"
+      - "yahs"
+      - "purge_haplotigs"
+    keywords_weight: 1.5  # 该方向论文的权重加成
+    members:
+      - email: "assembler@example.com"
+        name: "组装分析师"
+        role: "analyst"
+        location: "shenzhen"  # 深圳团队
+        
+  - id: "sv-team"
+    name: "结构变异检测组"
+    focus:
+      - "structural variation"
+      - "SV calling"
+      - "SNP calling"
+      - "population genomics"
+      - "Sniffles"
+      - "bcftools"
+    keywords_weight: 1.5
+    members:
+      - email: "sv@example.com"
+        name: "SV检测员"
+        role: "analyst"
+        location: "wuhan"  # 武汉团队
+
+  - id: "afp-team"
+    name: "抗冻蛋白研究组"
+    focus:
+      - "antifreeze protein"
+      - "ice binding"
+      - "thermal hysteresis"
+      - "cold adaptation"
+      - "AFP"
+      - "Myrmecia"
+    keywords_weight: 1.5
+    members:
+      - email: "afp@example.com"
+        name: "抗冻蛋白研究员"
+        role: "analyst"
+        location: "shenzhen"
+
+# 地理位置差异化配置
+locations:
+  shenzhen:
+    name: "深圳团队"
+    bias: "experimental"  # 偏重：实验技术、测序平台
+    extra_keywords:
+      - "PacBio"
+      - "Oxford Nanopore"
+      - "HiFi reads"
+      - "sequencing technology"
+      - "library preparation"
+    
+  wuhan:
+    name: "武汉团队"
+    bias: "computational"  # 偏重：生物信息学分析、工具开发
+    extra_keywords:
+      - "bioinformatics pipeline"
+      - "Snakemake"
+      - "Nextflow"
+      - "benchmark"
+      - "comparative analysis"
+
+# 团队知识库同步配置
+knowledge_base:
+  # 是否启用团队知识库同步
+  enabled: true
+  
+  # 按团队分组推送邮件
+  group_by_team: true
+  
+  # 是否将摘要推送到团队 GitHub Wiki
+  sync_to_wiki: false
+  
+  # 团队共享的已读/忽略列表（避免重复推送）
+  shared_ignore_list: true
+  
+  # 新成员加入时的历史文献回顾天数
+  onboarding_history_days: 30
+
+# 推送策略
+push_strategy:
+  # 个人推送：每个人的定制化推送
+  personal: true
+  
+  # 团队日报：每日汇总推送给团队负责人
+  team_daily: true
+  
+  # 团队周报：每周汇总推送给团队负责人
+  team_weekly: true
+  
+  # 跨团队推送：论文涉及多个研究方向时，推送到相关团队
+  cross_team: true
+
+# 阅读疲劳控制
+fatigue_control:
+  # 每日推送上限（按人）
+  max_daily_per_person: 15
+  
+  # 周末是否推送（false=只推送高分文献）
+  weekend_push: false
+  
+  # 节假日是否推送
+  holiday_push: false
+  
+  # 已读论文不重复推送
+  skip_read: true

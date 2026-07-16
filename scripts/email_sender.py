@@ -381,7 +381,7 @@ body {{
 </body>
 </html>"""
 
-    def send_digest(self, digest_path: str, paper_count: int) -> bool:
+    def send_digest(self, digest_path: str, paper_count: int, follow_up_html: str = "") -> bool:
         """Send digest email with beautiful HTML template"""
         # Skip if SMTP not configured
         if not all([self.smtp_server, self.smtp_user, self.smtp_password]):
@@ -399,6 +399,14 @@ body {{
             md_content = f.read()
 
         html_body = self._md_to_html(md_content)
+        
+        # Insert follow-up reminder if provided
+        if follow_up_html:
+            # Insert before the closing </body> tag or at the end of content
+            html_body = html_body.replace(
+                '<div class="content">',
+                f'<div class="content">\n                    {follow_up_html}'
+            )
 
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject

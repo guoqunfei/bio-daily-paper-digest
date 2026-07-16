@@ -1,304 +1,283 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-文献获取模块：从 PubMed、arXiv、Semantic Scholar 获取最新文献
+文献抓取模块：多源检索 + 严格关键词过滤 + 黑名单排除 + 用户兴趣画像加分
 """
 
 import os
-import json
-import re
+import sys
 import time
-import urllib.request
-import urllib.parse
-import urllib.error
+import requests
+import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional
-from xml.etree import ElementTree as ET
+from typing import List, Dict
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+from config import Config
+from github_feedback import MultiUserFeedbackStore
+
+
+def log(msg: str):
+    print(f"[FETCH] {msg}")
+    sys.stdout.flush()
 
 
 class PaperFetcher:
-    """文献获取器"""
+    def __init__(self):
+        self.cfg = Config()
+        self.core = self.cfg.core_keywords
+        self.high = self.cfg.high_value_keywords
+        self.exclude = self.cfg.exclude_keywords
+        # 加载多用户反馈
+        self.mufb = MultiUserFeedbackStore()
+        self.user_weights = {}
+        email_to = os.getenv("EMAIL_TO", "").strip()
+        for email in [e.strip() for e in email_to.split(",") if e.strip()]:
+            self.user_weights[email] = self.mufb.get_user_weights(email)
+        if any(self.user_weights.values()):
+            log(f"Loaded user interest weights for {len(self.user_weights)} users")
 
-    def __init__(self, cache_dir: str = ".paper-digest-cache"):
-        self.cache_dir = cache_dir
-        os.makedirs(cache_dir, exist_ok=True)
+    def fetch_all(self, lookback_days: int = None) -> List[Dict]:
+        if lookback_days is None:
+            lookback_days = self.cfg.lookback_days
+        log(f"Starting fetch with lookback={lookback_days} days")
+        log(f"Core keywords: {len(self.core)}, High-value: {len(self.high)}, Exclude: {len(self.exclude)}")
+        all_papers = []
+        src_cfg = self.cfg.get_source_config
+        if src_cfg("pubmed").get("enabled", True):
+            all_papers.extend(self._fetch_pubmed(lookback_days))
+            time.sleep(0.5)
+        if src_cfg("arxiv").get("enabled", True):
+            all_papers.extend(self._fetch_arxiv(lookback_days))
+            time.sleep(0.5)
+        if src_cfg("semantic_scholar").get("enabled", True):
+            all_papers.extend(self._fetch_semantic_scholar(lookback_days))
+        log(f"Raw total before dedup: {len(all_papers)}")
+        return all_papers
 
-    def fetch_all(self, lookback_days: int = 1) -> List[Dict]:
-        """从所有来源获取文献"""
-        papers = []
-
-        print("[Fetcher] Fetching from PubMed...")
-        papers.extend(self.fetch_pubmed(lookback_days))
-        time.sleep(1)
-
-        print("[Fetcher] Fetching from arXiv...")
-        papers.extend(self.fetch_arxiv(lookback_days))
-        time.sleep(1)
-
-        print("[Fetcher] Fetching from Semantic Scholar...")
-        papers.extend(self.fetch_semantic_scholar(lookback_days))
-
-        # 去重（基于 DOI）
-        seen_dois = set()
-        unique_papers = []
+    def score_and_filter(self, papers: List[Dict]) -> List[Dict]:
+        filtered = []
         for p in papers:
-            doi = p.get("doi", "")
-            if doi and doi in seen_dois:
+            score, reason, excluded = self._score_relevance(p)
+            if excluded:
+                log(f"EXCLUDED: {p.get('title', '')[:50]}... | Reason: {excluded}")
                 continue
-            if doi:
-                seen_dois.add(doi)
-            unique_papers.append(p)
+            if score >= 1:
+                p["relevance_score"] = score
+                p["match_reason"] = reason
+                # 检查是否被任何用户忽略
+                p["ignored_by"] = []
+                for email in self.user_weights.keys():
+                    key = p.get("doi", "") or p.get("arxiv_id", "") or p.get("title", "")[:50]
+                    if self.mufb.is_ignored_by_user(key, email):
+                        p["ignored_by"].append(email)
+                filtered.append(p)
+        filtered.sort(key=lambda x: x.get("relevance_score", 0), reverse=True)
+        log(f"After strict filtering: {len(filtered)} papers")
+        return filtered
 
-        return unique_papers
+    def _score_relevance(self, paper: Dict):
+        title = (paper.get("title", "") or "").lower()
+        abstract = (paper.get("abstract", "") or "").lower()
+        full_text = f"{title} {abstract}"
+        for ex in self.exclude:
+            if ex.lower() in full_text:
+                return 0, "", f"Excluded keyword: {ex}"
+        score = 0
+        matched = []
+        for kw in self.core:
+            kw_lower = kw.lower()
+            if kw_lower in full_text:
+                score += 1
+                matched.append(kw)
+                if kw_lower in title:
+                    score += 2
+        for hv in self.high:
+            if hv.lower() in title:
+                score += 3
+                matched.append(f"[HIGH]{hv}")
+        # 用户兴趣画像加分
+        user_bonus = 0
+        user_matched = []
+        for email, weights in self.user_weights.items():
+            for kw, weight in weights.items():
+                if kw.lower() in full_text:
+                    user_bonus = max(user_bonus, weight)
+                    user_matched.append(f"{kw}(+{weight:.1f})")
+        if user_matched:
+            score += user_bonus
+            matched = list(set(matched + user_matched))
+        reason = ", ".join(matched[:5]) if matched else "No core match"
+        return score, reason, ""
 
-    def fetch_pubmed(self, lookback_days: int = 1) -> List[Dict]:
-        """从 PubMed 获取文献"""
-        papers = []
-        try:
-            # 构建 PubMed 检索式
-            query = self._build_pubmed_query(lookback_days)
-            search_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
-            params = {
-                "db": "pubmed",
-                "term": query,
-                "retmax": "50",
-                "retmode": "json",
-                "sort": "date"
-            }
-            url = f"{search_url}?{urllib.parse.urlencode(params)}"
-
-            with urllib.request.urlopen(url, timeout=30) as response:
-                data = json.loads(response.read().decode())
-                ids = data.get("esearchresult", {}).get("idlist", [])
-
-            if not ids:
-                return papers
-
-            # 获取详细信息
-            fetch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
-            fetch_params = {
-                "db": "pubmed",
-                "id": ",".join(ids),
-                "retmode": "xml"
-            }
-            fetch_url_str = f"{fetch_url}?{urllib.parse.urlencode(fetch_params)}"
-
-            with urllib.request.urlopen(fetch_url_str, timeout=30) as response:
-                xml_data = response.read().decode()
-
-            # 解析 XML
-            root = ET.fromstring(xml_data)
-            for article in root.findall(".//PubmedArticle"):
-                paper = self._parse_pubmed_article(article)
-                if paper:
-                    papers.append(paper)
-
-        except Exception as e:
-            print(f"[PubMed Error] {e}")
-
-        print(f"[PubMed] Fetched {len(papers)} papers")
-        return papers
-
-    def _build_pubmed_query(self, lookback_days: int) -> str:
-        """构建 PubMed 检索式"""
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=lookback_days)
-        date_range = f"{start_date.strftime('%Y/%m/%d')}:{end_date.strftime('%Y/%m/%d')}[PDAT]"
-
-        keywords = [
-            '"structural variation"[Title/Abstract]',
-            '"genome assembly"[Title/Abstract]',
-            '"mitochondrial genome"[Title/Abstract]',
-            '"antifreeze protein"[Title/Abstract]',
-            '"Hi-C"[Title/Abstract]',
-            '"long-read sequencing"[Title/Abstract]',
-            '"Myrmecia"[Title/Abstract]',
-            '"pig genome"[Title/Abstract]',
-            '"arthropod genomics"[Title/Abstract]',
-            '"TAD"[Title/Abstract]',
-            '"chromosome conformation"[Title/Abstract]',
-            '"SV calling"[Title/Abstract]',
-            '"chromosome-level"[Title/Abstract]',
-            '"ice-binding"[Title/Abstract]',
-            '"bull ant"[Title/Abstract]',
-            '"PacBio"[Title/Abstract]',
-            '"Oxford Nanopore"[Title/Abstract]',
-            '"3D genome"[Title/Abstract]',
+    def _fetch_pubmed(self, lookback_days: int) -> List[Dict]:
+        core_terms = [
+            "structural variation", "genome assembly", "mitochondrial genome",
+            "antifreeze protein", "Hi-C", "long-read sequencing", "Myrmecia",
+            "pig genome", "arthropod genomics", "TAD", "chromosome conformation"
         ]
-
-        query = f"({' OR '.join(keywords)}) AND {date_range}"
-        return query
-
-    def _parse_pubmed_article(self, article: ET.Element) -> Optional[Dict]:
-        """解析 PubMed XML"""
+        query_or = " OR ".join([f'"{t}"[Title/Abstract]' for t in core_terms])
+        end_date = datetime.now().strftime("%Y/%m/%d")
+        start_date = (datetime.now() - timedelta(days=lookback_days * 2)).strftime("%Y/%m/%d")
+        date_range = f"{start_date}:{end_date}[PDAT]"
+        full_query = f"({query_or}) AND ({date_range})"
+        log(f"PubMed query length: {len(full_query)} chars")
         try:
-            # 标题
-            title_elem = article.find(".//ArticleTitle")
-            title = title_elem.text if title_elem is not None else ""
-
-            # 摘要
-            abstract_elem = article.find(".//Abstract/AbstractText")
-            abstract = abstract_elem.text if abstract_elem is not None else ""
-
-            # DOI
-            doi = ""
-            for el in article.findall(".//ArticleId"):
-                if el.get("IdType") == "doi":
-                    doi = el.text or ""
-
-            # 作者
-            authors = []
-            for author in article.findall(".//Author"):
-                last = author.find("LastName")
-                first = author.find("ForeName")
-                if last is not None:
-                    name = f"{first.text} {last.text}" if first is not None else last.text
-                    authors.append(name)
-
-            # 日期
-            date_elem = article.find(".//PubDate")
-            pub_date = ""
-            if date_elem is not None:
-                year = date_elem.find("Year")
-                month = date_elem.find("Month")
-                day = date_elem.find("Day")
-                pub_date = f"{year.text or ''}-{month.text or ''}-{day.text or ''}"
-
-            # 期刊
-            journal = ""
-            journal_elem = article.find(".//Journal/Title")
-            if journal_elem is not None:
-                journal = journal_elem.text or ""
-
-            # URL
-            url = f"https://pubmed.ncbi.nlm.nih.gov/{article.find('.//PMID').text}/" if article.find(".//PMID") is not None else ""
-
-            return {
-                "source": "PubMed",
-                "title": title,
-                "abstract": abstract,
-                "authors": ", ".join(authors[:5]),
-                "date": pub_date,
-                "journal": journal,
-                "doi": doi,
-                "url": url
-            }
-        except Exception as e:
-            print(f"[PubMed Parse Error] {e}")
-            return None
-
-    def fetch_arxiv(self, lookback_days: int = 1) -> List[Dict]:
-        """从 arXiv 获取文献"""
-        papers = []
-        try:
-            # arXiv 分类
-            categories = ["q-bio.GN", "q-bio.PE", "cs.LG", "q-bio.BM"]
-            cat_query = " OR ".join([f"cat:{c}" for c in categories])
-
-            # 构建查询
-            keywords = [
-                "genome assembly",
-                "structural variation",
-                "SV calling",
-                "Hi-C scaffolding",
-                "antifreeze protein",
-                "arthropod",
-                "mitochondrial",
-                "long-read",
-                "benchmark"
-            ]
-            keyword_query = " OR ".join([f'"{kw}"' for kw in keywords])
-            query = f"({cat_query}) AND ({keyword_query})"
-
-            # 日期过滤（arXiv 使用 submittedDate）
-            end_date = datetime.now()
-            start_date = end_date - timedelta(days=lookback_days)
-            date_filter = f"submittedDate:[{start_date.strftime('%Y%m%d')}0000 TO {end_date.strftime('%Y%m%d')}235959]"
-
-            url = f"http://export.arxiv.org/api/query?search_query={urllib.parse.quote(query + ' AND ' + date_filter)}&start=0&max_results=30&sortBy=submittedDate&sortOrder=descending"
-
-            with urllib.request.urlopen(url, timeout=30) as response:
-                data = response.read().decode()
-
-            # 解析 Atom feed
-            root = ET.fromstring(data)
-            ns = {"atom": "http://www.w3.org/2005/Atom"}
-
-            for entry in root.findall("atom:entry", ns):
-                title_elem = entry.find("atom:title", ns)
-                title = title_elem.text if title_elem is not None else ""
-
-                summary_elem = entry.find("atom:summary", ns)
-                summary = summary_elem.text if summary_elem is not None else ""
-
-                authors = []
-                for author in entry.findall("atom:author", ns):
-                    name = author.find("atom:name", ns)
-                    if name is not None:
-                        authors.append(name.text)
-
-                link_elem = entry.find("atom:link[@rel='alternate']", ns)
-                url = link_elem.get("href") if link_elem is not None else ""
-
-                published_elem = entry.find("atom:published", ns)
-                published = published_elem.text[:10] if published_elem is not None else ""
-
-                papers.append({
-                    "source": "arXiv",
-                    "title": title,
-                    "abstract": summary,
-                    "authors": ", ".join(authors[:5]),
-                    "date": published,
-                    "journal": "arXiv",
-                    "doi": "",
-                    "url": url
-                })
-
-        except Exception as e:
-            print(f"[arXiv Error] {e}")
-
-        print(f"[arXiv] Fetched {len(papers)} papers")
-        return papers
-
-    def fetch_semantic_scholar(self, lookback_days: int = 1) -> List[Dict]:
-        """从 Semantic Scholar 获取文献"""
-        papers = []
-        try:
-            api_key = os.environ.get("SEMANTIC_SCHOLAR_API_KEY", "")
-            query = "structural variation genome assembly arthropod pig antifreeze protein Hi-C"
-
-            url = f"https://api.semanticscholar.org/graph/v1/paper/search?query={urllib.parse.quote(query)}&fields=title,abstract,authors,year,externalIds,url,openAccessPdf&limit=30&sort=publicationDate&order=desc"
-
-            headers = {}
-            if api_key:
-                headers["x-api-key"] = api_key
-
-            req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=30) as response:
-                data = json.loads(response.read().decode())
-
-            for item in data.get("data", []):
-                # 日期过滤
-                year = item.get("year", 0)
-                if year < datetime.now().year - 1:
+            esearch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+            r = requests.get(esearch_url, params={
+                "db": "pubmed", "term": full_query, "retmax": 100, "retmode": "json"
+            }, timeout=30)
+            r.raise_for_status()
+            ids = r.json().get("esearchresult", {}).get("idlist", [])
+            if not ids:
+                log("PubMed: 0 results")
+                return []
+            log(f"PubMed: {len(ids)} IDs found")
+            efetch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+            r2 = requests.get(efetch_url, params={
+                "db": "pubmed", "id": ",".join(ids), "retmode": "xml"
+            }, timeout=60)
+            r2.raise_for_status()
+            root = ET.fromstring(r2.content)
+            papers = []
+            for article in root.findall(".//PubmedArticle"):
+                try:
+                    title_elem = article.find(".//ArticleTitle")
+                    title = (title_elem.text or "") if title_elem is not None else ""
+                    abstract_parts = article.findall(".//Abstract/AbstractText")
+                    abstract = " ".join([a.text or "" for a in abstract_parts])
+                    doi_elem = article.find(".//ArticleId[@IdType='doi']")
+                    doi = doi_elem.text if doi_elem is not None else ""
+                    pmid_elem = article.find(".//PMID")
+                    pmid = pmid_elem.text if pmid_elem is not None else ""
+                    journal_elem = article.find(".//Journal/Title")
+                    journal = journal_elem.text if journal_elem is not None else ""
+                    author_list = []
+                    for author in article.findall(".//Author"):
+                        last = author.find("LastName")
+                        first = author.find("ForeName")
+                        if last is not None:
+                            name = f"{last.text} {first.text if first is not None else ''}".strip()
+                            author_list.append(name)
+                    authors = ", ".join(author_list[:3])
+                    year_elem = article.find(".//PubDate/Year")
+                    year = year_elem.text if year_elem is not None else ""
+                    papers.append({
+                        "title": title.strip(),
+                        "abstract": abstract.strip(),
+                        "doi": doi,
+                        "pmid": pmid,
+                        "journal": journal,
+                        "date": year,
+                        "authors": authors,
+                        "source": "PubMed",
+                        "url": f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/" if pmid else (f"https://doi.org/{doi}" if doi else "")
+                    })
+                except Exception as e:
+                    log(f"PubMed parse error: {e}")
                     continue
-
-                authors = [a.get("name", "") for a in item.get("authors", [])[:5]]
-                external_ids = item.get("externalIds", {})
-                doi = external_ids.get("DOI", "")
-
-                papers.append({
-                    "source": "Semantic Scholar",
-                    "title": item.get("title", ""),
-                    "abstract": item.get("abstract", ""),
-                    "authors": ", ".join(authors),
-                    "date": str(year),
-                    "journal": "",
-                    "doi": doi,
-                    "url": item.get("url", "")
-                })
-
+            log(f"PubMed parsed: {len(papers)} papers")
+            return papers
         except Exception as e:
-            print(f"[Semantic Scholar Error] {e}")
+            log(f"PubMed fetch error: {e}")
+            return []
 
-        print(f"[Semantic Scholar] Fetched {len(papers)} papers")
+    def _fetch_arxiv(self, lookback_days: int) -> List[Dict]:
+        categories = self.cfg.get_source_config("arxiv").get("categories", ["q-bio.GN", "q-bio.PE", "cs.LG"])
+        query_terms = " OR ".join([
+            "genome assembly", "structural variation", "SV calling",
+            "Hi-C scaffolding", "antifreeze protein", "arthropod", "mitochondrial"
+        ])
+        papers = []
+        for cat in categories:
+            url = "http://export.arxiv.org/api/query"
+            params = {
+                "search_query": f"cat:{cat} AND ({query_terms})",
+                "start": 0, "max_results": 30,
+                "sortBy": "submittedDate", "sortOrder": "descending"
+            }
+            try:
+                r = requests.get(url, params=params, timeout=30)
+                r.raise_for_status()
+                root = ET.fromstring(r.content)
+                ns = {"atom": "http://www.w3.org/2005/Atom"}
+                for entry in root.findall("atom:entry", ns):
+                    title = entry.find("atom:title", ns)
+                    title = title.text if title is not None else ""
+                    summary = entry.find("atom:summary", ns)
+                    abstract = summary.text if summary is not None else ""
+                    id_url = entry.find("atom:id", ns)
+                    id_url = id_url.text if id_url is not None else ""
+                    published = entry.find("atom:published", ns)
+                    pub_date = published.text[:10] if published is not None else ""
+                    arxiv_id = id_url.split("/")[-1] if id_url else ""
+                    authors = [a.text for a in entry.findall("atom:author/atom:name", ns) if a.text]
+                    papers.append({
+                        "title": title.replace("\n", " ").strip(),
+                        "abstract": abstract.replace("\n", " ").strip(),
+                        "doi": "",
+                        "arxiv_id": arxiv_id,
+                        "journal": f"arXiv:{cat}",
+                        "date": pub_date,
+                        "authors": ", ".join(authors[:3]),
+                        "source": "arXiv",
+                        "url": f"https://arxiv.org/abs/{arxiv_id}" if arxiv_id else id_url
+                    })
+            except Exception as e:
+                log(f"arXiv fetch error for {cat}: {e}")
+                continue
+        log(f"arXiv total: {len(papers)} papers")
         return papers
+
+    def _fetch_semantic_scholar(self, lookback_days: int) -> List[Dict]:
+        api_key = os.getenv("SEMANTIC_SCHOLAR_API_KEY", "")
+        query = "structural variation genome assembly arthropod pig antifreeze protein Hi-C"
+        headers = {"x-api-key": api_key} if api_key else {}
+        start_date = (datetime.now() - timedelta(days=lookback_days * 3)).strftime("%Y-%m-%d")
+        url = "https://api.semanticscholar.org/graph/v1/paper/search"
+        params = {
+            "query": query,
+            "fields": "title,abstract,authors,year,venue,externalIds,openAccessPdf,url",
+            "limit": 30,
+            "publicationDateOrYear": start_date
+        }
+        try:
+            r = requests.get(url, params=params, headers=headers, timeout=30)
+            r.raise_for_status()
+            data = r.json()
+            papers = []
+            for p in data.get("data", []):
+                authors_list = [a.get("name", "") for a in p.get("authors", [])[:3]]
+                ext_ids = p.get("externalIds", {}) or {}
+                doi = ext_ids.get("DOI", "")
+                arxiv = ext_ids.get("ArXiv", "")
+                oa = p.get("openAccessPdf", {}) or {}
+                url_link = oa.get("url") or p.get("url") or (f"https://doi.org/{doi}" if doi else "") or (f"https://arxiv.org/abs/{arxiv}" if arxiv else "")
+                papers.append({
+                    "title": p.get("title", ""),
+                    "abstract": p.get("abstract", "") or "",
+                    "doi": doi,
+                    "arxiv_id": arxiv,
+                    "journal": p.get("venue", "N/A") or "N/A",
+                    "date": str(p.get("year", "")),
+                    "authors": ", ".join(authors_list),
+                    "source": "Semantic Scholar",
+                    "url": url_link
+                })
+            log(f"Semantic Scholar: {len(papers)} papers")
+            return papers
+        except Exception as e:
+            log(f"Semantic Scholar fetch error: {e}")
+            return []
+
+
+if __name__ == "__main__":
+    import json as json_lib
+    fetcher = PaperFetcher()
+    papers = fetcher.fetch_all(lookback_days=2)
+    filtered = fetcher.score_and_filter(papers)
+    print(json_lib.dumps([
+        {"title": p["title"], "score": p.get("relevance_score"), "reason": p.get("match_reason")}
+        for p in filtered[:10]
+    ], ensure_ascii=False, indent=2))

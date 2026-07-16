@@ -23,6 +23,8 @@ from scripts.trend_analyzer import analyze_trends
 from scripts.trend_report import generate_weekly_report
 from scripts.github_feedback import get_feedback
 from scripts.email_sender import get_sender
+from scripts.user_preferences import get_preferences
+from scripts.follow_up import get_follow_up_manager
 
 
 # 配置常量
@@ -36,6 +38,14 @@ def run_daily():
     print(f"[{today}] === Daily Digest Started ===")
 
     try:
+        # Initialize feedback loop components
+        preferences = get_preferences()
+        follow_up_manager = get_follow_up_manager()
+        
+        # Print preference stats
+        stats = preferences.get_stats()
+        print(f"[{today}] User preferences loaded: {stats['ignored_papers']} ignored, {stats['read_papers']} read, {stats['follow_up_count']} follow-ups")
+
         # 1. Fetch papers
         keywords = config.search_keywords
         max_results = config.max_results
@@ -64,10 +74,26 @@ def run_daily():
         unique_papers, removed = deduplicate_papers(relevant_papers)
         print(f"[{today}] Deduplicated: {len(unique_papers)} unique, {removed} removed")
 
-        # 4. Apply daily limit
-        limited_papers = unique_papers[:MAX_DAILY_PAPERS]
-        if len(unique_papers) > MAX_DAILY_PAPERS:
-            print(f"[{today}] Limited to top {MAX_DAILY_PAPERS} papers (from {len(unique_papers)})")
+        # 4. Apply user preference filtering (ignore already read/ignored papers)
+        print(f"[{today}] Applying user preference filters...")
+        filtered_by_prefs = []
+        ignored_count = 0
+        read_count = 0
+        for p in unique_papers:
+            if preferences.is_ignored(p):
+                ignored_count += 1
+                continue
+            if preferences.is_read(p):
+                read_count += 1
+                continue
+            filtered_by_prefs.append(p)
+        
+        print(f"[{today}] Preference filter: {ignored_count} ignored, {read_count} already read, {len(filtered_by_prefs)} remaining")
+        
+        # 5. Apply daily limit
+        limited_papers = filtered_by_prefs[:MAX_DAILY_PAPERS]
+        if len(filtered_by_prefs) > MAX_DAILY_PAPERS:
+            print(f"[{today}] Limited to top {MAX_DAILY_PAPERS} papers (from {len(filtered_by_prefs)})")
 
         # 5. Source classification
         source_stats = classify_sources(limited_papers)
@@ -99,6 +125,11 @@ def run_daily():
         ]
 
         # LLM overview
+        # Add follow-up reminders section first
+        follow_up_reminder_md = follow_up_manager.generate_reminder_section()
+        if follow_up_reminder_md:
+            lines.extend([follow_up_reminder_md, ""])
+
         if summarizer.enabled:
             print(f"[{today}] Generating LLM overview...")
             overview = summarizer.generate_overview(limited_papers, language)
@@ -172,7 +203,8 @@ def run_daily():
         feedback = get_feedback()
         if feedback.enabled:
             source_counts = {s: info['count'] for s, info in source_stats['sources'].items()}
-            feedback.report_success(len(limited_papers), source_counts)
+            due_follow_ups = follow_up_manager.get_due_reminders()
+            feedback.report_success(len(limited_papers), source_counts, papers=limited_papers, follow_ups=due_follow_ups)
 
         print(f"[{today}] === Daily Digest Completed ===")
 

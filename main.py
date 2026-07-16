@@ -2,16 +2,20 @@
 """
 Bio Daily Paper Digest - Main Entry Point
 主入口：支持 daily / weekly / cloudflare 三种运行模式
+整合：信息筛选 → 相关性评分 → 去重 → 结构化摘要 → 邮件推送 → GitHub反馈
 """
 
 import os
 import sys
 import argparse
 import traceback
+import json
 from datetime import datetime
+from typing import List, Dict
 
 from scripts.config import config
 from scripts.fetch_papers import fetch_all_sources
+from scripts.scoring import get_default_config, filter_and_score_papers, get_score_level, get_score_badge
 from scripts.dedup import deduplicate_papers
 from scripts.source_classifier import classify_sources
 from scripts.summarize import get_summarizer
@@ -19,6 +23,11 @@ from scripts.trend_analyzer import analyze_trends
 from scripts.trend_report import generate_weekly_report
 from scripts.github_feedback import get_feedback
 from scripts.email_sender import get_sender
+
+
+# 配置常量
+MAX_DAILY_PAPERS = 15  # 每日推送上限
+MIN_RELEVANCE_SCORE = 4.0  # 最低相关性阈值
 
 
 def run_daily():
@@ -37,16 +46,42 @@ def run_daily():
             print(f"[{today}] No papers found. Exiting.")
             return
 
-        # 2. Deduplicate
-        unique_papers, removed = deduplicate_papers(papers)
+        # 2. Relevance scoring and filtering
+        print(f"[{today}] Scoring {len(papers)} papers...")
+        scoring_config = get_default_config()
+        scored_papers = filter_and_score_papers(papers, scoring_config)
+        
+        # Filter out low-relevance papers
+        relevant_papers = [p for p in scored_papers if p["relevance_score"] >= MIN_RELEVANCE_SCORE]
+        
+        if not relevant_papers:
+            print(f"[{today}] No relevant papers found after scoring. Exiting.")
+            return
+        
+        print(f"[{today}] Scored: {len(relevant_papers)} relevant (score >= {MIN_RELEVANCE_SCORE}), {len(scored_papers) - len(relevant_papers)} filtered")
+
+        # 3. Deduplicate
+        unique_papers, removed = deduplicate_papers(relevant_papers)
         print(f"[{today}] Deduplicated: {len(unique_papers)} unique, {removed} removed")
 
-        # 3. Source classification
-        source_stats = classify_sources(unique_papers)
+        # 4. Apply daily limit
+        limited_papers = unique_papers[:MAX_DAILY_PAPERS]
+        if len(unique_papers) > MAX_DAILY_PAPERS:
+            print(f"[{today}] Limited to top {MAX_DAILY_PAPERS} papers (from {len(unique_papers)})")
+
+        # 5. Source classification
+        source_stats = classify_sources(limited_papers)
         source_summary = {s: f"{info['count']} ({info['percentage']}%)" for s, info in source_stats['sources'].items()}
         print(f"[{today}] Sources: {source_summary}")
+        
+        # Show score distribution
+        score_distribution = {}
+        for p in limited_papers:
+            level = get_score_level(p["relevance_score"])
+            score_distribution[level] = score_distribution.get(level, 0) + 1
+        print(f"[{today}] Score distribution: {score_distribution}")
 
-        # 4. Generate digest with LLM
+        # 6. Generate digest with LLM
         summarizer = get_summarizer()
         language = config.digest_language
 
@@ -56,7 +91,8 @@ def run_daily():
         lines = [
             f"# Daily Literature Digest - {today}",
             "",
-            f"> **Total Papers:** {len(unique_papers)} | **Sources:** {', '.join(source_stats['sources'].keys())}",
+            f"> **Total Papers:** {len(limited_papers)} | **Sources:** {', '.join(source_stats['sources'].keys())}",
+            f"> **Score Distribution:** {score_distribution}",
             "",
             "---",
             "",
@@ -65,16 +101,29 @@ def run_daily():
         # LLM overview
         if summarizer.enabled:
             print(f"[{today}] Generating LLM overview...")
-            overview = summarizer.generate_overview(unique_papers, language)
+            overview = summarizer.generate_overview(limited_papers, language)
             if overview:
                 lines.extend(["## Research Trend Overview", "", overview, "", "---", ""])
 
         # Individual papers
-        for i, paper in enumerate(unique_papers, 1):
+        for i, paper in enumerate(limited_papers, 1):
+            score = paper.get("relevance_score", 0)
+            level = get_score_level(score)
+            badge = get_score_badge(score)
+            
+            # Generate structured summary if LLM enabled
             if summarizer.enabled and i <= config.get("digest", "llm_max_papers", default=15):
-                summary = summarizer.summarize_paper(paper['title'], paper['abstract'], language)
+                print(f"[{today}] Summarizing paper {i}/{len(limited_papers)}: {paper['title'][:50]}...")
+                structured = summarizer.summarize_paper_structured(paper['title'], paper['abstract'], language)
+                summary = structured.one_liner
+                method = structured.method_innovation
+                dataset = structured.dataset
+                metrics = structured.core_metrics
+                code_repo = structured.code_repo
+                data_avail = structured.data_availability
             else:
                 summary = paper['abstract'][:300] + "..." if len(paper['abstract']) > 300 else paper['abstract']
+                method = dataset = metrics = code_repo = data_avail = ""
 
             lines.extend([
                 f"## {i}. {paper['title']}",
@@ -82,29 +131,48 @@ def run_daily():
                 f"- **Source:** {paper['source']} | **Published:** {paper['published']}",
                 f"- **Authors:** {paper['authors']}",
                 f"- **URL:** {paper['url']}",
+                f"- **Relevance Score:** {badge} {score}/10 ({level})",
+                f"- **Score Reason:** {paper.get('relevance_reason', 'N/A')}",
                 "",
                 "### Summary",
                 "",
                 summary if summary else "*No summary available.*",
                 "",
-                "---",
-                "",
             ])
+            
+            # Add structured details if available
+            if method or dataset or metrics:
+                lines.extend([
+                    "**方法创新:** " + (method if method else "N/A"),
+                    "**数据集:** " + (dataset if dataset else "N/A"),
+                    "**核心指标:** " + (metrics if metrics else "N/A"),
+                    "**代码仓库:** " + (code_repo if code_repo else "N/A"),
+                    "**数据可用性:** " + (data_avail if data_avail else "N/A"),
+                    "",
+                ])
+            
+            lines.extend(["---", ""])
 
         with open(digest_path, "w", encoding="utf-8") as f:
             f.write("\n".join(lines))
 
         print(f"[{today}] Digest saved: {digest_path}")
 
-        # 5. Send email
-        sender = get_sender()
-        sender.send_digest(digest_path, len(unique_papers))
+        # Save raw data
+        data_path = f"output/{today}_papers.json"
+        with open(data_path, "w", encoding="utf-8") as f:
+            json.dump(limited_papers, f, ensure_ascii=False, indent=2)
+        print(f"[{today}] Paper data saved: {data_path}")
 
-        # 6. GitHub feedback
+        # 7. Send email
+        sender = get_sender()
+        sender.send_digest(digest_path, len(limited_papers))
+
+        # 8. GitHub feedback
         feedback = get_feedback()
         if feedback.enabled:
             source_counts = {s: info['count'] for s, info in source_stats['sources'].items()}
-            feedback.report_success(len(unique_papers), source_counts)
+            feedback.report_success(len(limited_papers), source_counts)
 
         print(f"[{today}] === Daily Digest Completed ===")
 

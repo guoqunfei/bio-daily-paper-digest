@@ -1,5 +1,6 @@
 # Bio Daily Paper Digest - Keyword Configuration
 # 独立关键词配置文件（可被 settings.yaml 引用或覆盖）
+# 支持白名单、黑名单、高优先级关键词的分层过滤
 
 keywords:
   # 核心基因组学
@@ -48,3 +49,189 @@ keywords:
   - "synthetic biology"
   - "metagenomics"
   - "microbiome"
+
+# 白名单：标题或摘要中出现以下关键词会被保留（即使不在黑名单中）
+whitelist:
+  # 核心技术
+  - "structural variation"
+  - "genome assembly"
+  - "genome annotation"
+  - "scaffolding"
+  - "chromosome-level"
+  - "contig"
+  - "assembly quality"
+  - "QV"
+  - "completeness"
+  - "BUSCO"
+  - "Merqury"
+  
+  # 测序技术
+  - "long-read sequencing"
+  - "PacBio"
+  - "Oxford Nanopore"
+  - "HiFi reads"
+  - "nanopore"
+  - "ONT"
+  - "third-generation sequencing"
+  - "synthetic long reads"
+  
+  # 三维基因组
+  - "Hi-C"
+  - "chromatin conformation"
+  - "TAD"
+  - "3D genome"
+  - "promoter-enhancer"
+  - "scaffolding"
+  
+  # 变异检测
+  - "SNP calling"
+  - "structural variant"
+  - "SV calling"
+  - "indel"
+  - "copy number variation"
+  - "population genomics"
+  
+  # 节肢动物/抗冻蛋白
+  - "antifreeze protein"
+  - "AFP"
+  - "ice-binding"
+  - "thermal hysteresis"
+  - "arthropod"
+  - "insect"
+  - "Myrmecia"
+  - "bull ant"
+  - "ant genome"
+  - "invertebrate"
+  - "cold tolerance"
+  
+  # 猪基因组
+  - "pig genome"
+  - "Sus scrofa"
+  - "porcine"
+  - "swine"
+  - "pig"
+  
+  # 方法学
+  - "benchmark"
+  - "pipeline"
+  - "workflow"
+  - "Snakemake"
+  - "Nextflow"
+  - "Docker"
+  - "container"
+  - "Singularity"
+  - "GitHub"
+
+# 黑名单：标题或摘要中出现以下关键词会被自动排除
+blacklist:
+  # 临床/医学研究
+  - "clinical trial"
+  - "patient"
+  - "cancer therapy"
+  - "oncology"
+  - "disease"
+  - "drug"
+  - "treatment"
+  - "therapeutic"
+  - "hospital"
+  - "medical"
+  - "diagnosis"
+  - "prognosis"
+  - "symptom"
+  - "pathology"
+  - "biopsy"
+  
+  # 传染病/流行病
+  - "COVID-19"
+  - "SARS-CoV"
+  - "pandemic"
+  - "epidemic"
+  - "infectious disease"
+  - "vaccine"
+  
+  # 纯植物农艺（非基因组组装方向）
+  - "crop yield"
+  - "agronomy"
+  - "fertilizer"
+  - "pesticide"
+  - "irrigation"
+  - "soil"
+  
+  # 纯人类医学
+  - "human genome"
+  - "patient cohort"
+  - "clinical"
+  - "health"
+  - "medicine"
+  
+  # 纯生态/保护（非基因组方向）
+  - "conservation"
+  - "biodiversity"
+  - "ecosystem"
+
+# 高优先级关键词：直接涉及用户研究领域，给予更高评分
+high_priority:
+  # 直接相关的物种
+  - "Myrmecia"
+  - "bull ant"
+  - "ant genome"
+  - "antifreeze protein"
+  - "AFP"
+  - "Sus scrofa"
+  - "pig genome"
+  - "porcine genome"
+  
+  # 直接相关的技术
+  - "structural variation"
+  - "genome assembly"
+  - "chromosome-level"
+  - "Hi-C scaffolding"
+  - "Yahs"
+  - "Hifiasm"
+  - "de novo assembly"
+  
+  # 直接相关的工具
+  - "Sniffles"
+  - "SVIM"
+  - "pbsv"
+  - "cuteSV"
+  - "purge_haplotigs"
+  - "Merqury"
+  - "BUSCO"
+  - "Quast"
+  - "LRA"
+  - "Minimap2"
+  - "NGMLR"
+
+# 监控的物种列表
+species:
+  - "Myrmecia"
+  - "bull ant"
+  - "ant"
+  - "arthropod"
+  - "insect"
+  - "Sus scrofa"
+  - "pig"
+  - "porcine"
+  - "swine"
+
+# 监控的工具列表
+tools:
+  - "Hifiasm"
+  - "Yahs"
+  - "Sniffles"
+  - "SVIM"
+  - "pbsv"
+  - "cuteSV"
+  - "purge_haplotigs"
+  - "Merqury"
+  - "BUSCO"
+  - "Quast"
+  - "LRA"
+  - "Minimap2"
+  - "NGMLR"
+
+# 监控的课题组/作者
+labs:
+  - "T2T Consortium"
+  - "Telomere-to-Telomere"

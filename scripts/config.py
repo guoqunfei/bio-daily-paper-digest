@@ -131,6 +131,13 @@ class Config:
     def github_repo(self) -> str:
         return os.environ.get("GITHUB_REPO", "")
 
+    @property
+    def scoring_config(self) -> Dict[str, Any]:
+        return {
+            "min_score": self.get("scoring", "min_score", default=4.0),
+            "max_daily_papers": self.get("scoring", "max_daily_papers", default=15),
+        }
+
 
 # Global config instance
 config = Config()

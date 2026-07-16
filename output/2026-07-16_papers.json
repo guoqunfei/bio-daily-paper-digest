@@ -1,0 +1,13 @@
+[
+  {
+    "source": "arXiv",
+    "title": "Benchmarking trigonometric continuous-variable gate primitives with trapped ions",
+    "authors": "Tommaso Rainaldi, Jake Montgomery, Christopher G. Yale et al.",
+    "abstract": "Hybrid continuous-discrete-variable quantum processors can represent bosonic degrees of freedom directly in oscillator modes, or qumodes, while using qubits for control, readout, and nonlinear operations. Recently proposed trigonometric continuous-variable (CV) gate sets promote periodic functions of oscillator quadratures to elementary operations, making them natural primitives for compact variables, rotor models, lattice gauge theories, and anharmonic dynamics. Here we experimentally demonstra",
+    "published": "2026-07-15",
+    "url": "https://arxiv.org/pdf/2607.14085v1",
+    "doi": "",
+    "relevance_score": 4.8,
+    "relevance_reason": "白名单关键词: benchmark; 目标物种: ant"
+  }
+]

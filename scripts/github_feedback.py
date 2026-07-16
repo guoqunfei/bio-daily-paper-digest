@@ -6,7 +6,7 @@ GitHub 反馈：自动提交 Issue 汇报运行状态、错误报告
 
 import os
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, Optional
 
 

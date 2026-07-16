@@ -43,7 +43,8 @@ def run_daily():
 
         # 3. Source classification
         source_stats = classify_sources(unique_papers)
-        print(f"[{today}] Sources: {source_stats['sources']}")
+        source_summary = {s: f"{info['count']} ({info['percentage']}%)" for s, info in source_stats['sources'].items()}
+        print(f"[{today}] Sources: {source_summary}")
 
         # 4. Generate digest with LLM
         summarizer = get_summarizer()

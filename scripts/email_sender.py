@@ -381,8 +381,17 @@ body {{
 </body>
 </html>"""
 
-    def send_digest(self, digest_path: str, paper_count: int) -> None:
+    def send_digest(self, digest_path: str, paper_count: int) -> bool:
         """Send digest email with beautiful HTML template"""
+        # Skip if SMTP not configured
+        if not all([self.smtp_server, self.smtp_user, self.smtp_password]):
+            print("[EmailSender] SMTP not configured. Skipping email.")
+            return False
+
+        if not self.receivers:
+            print("[EmailSender] No receivers configured. Skipping email.")
+            return False
+
         today = datetime.now().strftime("%Y-%m-%d")
         subject = f"[Bio-Digest] {today} 文献综述 ({paper_count}篇)"
 
@@ -397,15 +406,21 @@ body {{
         msg["To"] = ", ".join(self.receivers)
         msg.attach(MIMEText(html_body, "html", "utf-8"))
 
-        with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
+        try:
             if self.smtp_port == 465:
-                server = smtplib.SMTP_SSL(self.smtp_server, self.smtp_port)
+                with smtplib.SMTP_SSL(self.smtp_server, self.smtp_port) as server:
+                    server.login(self.smtp_user, self.smtp_password)
+                    server.sendmail(self.smtp_user, self.receivers, msg.as_string())
             else:
-                server.starttls()
-            server.login(self.smtp_user, self.smtp_password)
-            server.sendmail(self.smtp_user, self.receivers, msg.as_string())
-
-        print(f"[EmailSender] Sent successfully to: {', '.join(self.receivers)}")
+                with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
+                    server.starttls()
+                    server.login(self.smtp_user, self.smtp_password)
+                    server.sendmail(self.smtp_user, self.receivers, msg.as_string())
+            print(f"[EmailSender] Sent successfully to: {', '.join(self.receivers)}")
+            return True
+        except Exception as e:
+            print(f"[EmailSender] Failed to send email: {e}")
+            return False
 
 
 def get_sender() -> EmailSender:

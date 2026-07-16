@@ -1,0 +1,25 @@
+# Bio Daily Paper Digest Configuration
+# 每日文献综述配置文件
+
+search:
+  sources:
+    - arxiv
+    - pubmed
+  keywords:
+    - "structural variation"
+    - "genome assembly"
+    - "long-read sequencing"
+    - "Hi-C"
+    - "SNP calling"
+    - "population genomics"
+  date_range: "last_7_days"
+  max_results: 15
+
+digest:
+  language: "zh"
+  style: "academic"
+  max_abstract_length: 500
+
+email:
+  subject_template: "[Bio-Digest] {date} Literature Digest ({count} papers)"
+  send_time: "09:00"

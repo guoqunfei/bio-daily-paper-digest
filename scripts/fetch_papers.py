@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-文献抓取模块：多源检索 + 严格关键词过滤 + 黑名单排除 + 用户兴趣画像加分
+文献抓取模块：多源检索 + 严格过滤 + 用户兴趣画像加分
 """
 
 import os
@@ -29,11 +29,10 @@ class PaperFetcher:
         self.core = self.cfg.core_keywords
         self.high = self.cfg.high_value_keywords
         self.exclude = self.cfg.exclude_keywords
-        # 加载多用户反馈
         self.mufb = MultiUserFeedbackStore()
         self.user_weights = {}
-        email_to = os.getenv("EMAIL_TO", "").strip()
-        for email in [e.strip() for e in email_to.split(",") if e.strip()]:
+        self.email_to = [e.strip() for e in os.getenv("EMAIL_TO", "").strip().split(",") if e.strip()]
+        for email in self.email_to:
             self.user_weights[email] = self.mufb.get_user_weights(email)
         if any(self.user_weights.values()):
             log(f"Loaded user interest weights for {len(self.user_weights)} users")
@@ -42,7 +41,7 @@ class PaperFetcher:
         if lookback_days is None:
             lookback_days = self.cfg.lookback_days
         log(f"Starting fetch with lookback={lookback_days} days")
-        log(f"Core keywords: {len(self.core)}, High-value: {len(self.high)}, Exclude: {len(self.exclude)}")
+        log(f"Core: {len(self.core)}, High: {len(self.high)}, Exclude: {len(self.exclude)}")
         all_papers = []
         src_cfg = self.cfg.get_source_config
         if src_cfg("pubmed").get("enabled", True):
@@ -64,11 +63,10 @@ class PaperFetcher:
                 log(f"EXCLUDED: {p.get('title', '')[:50]}... | Reason: {excluded}")
                 continue
             if score >= 1:
-                p["relevance_score"] = score
+                p["relevance_score"] = min(score, 10)  # 强制上限
                 p["match_reason"] = reason
-                # 检查是否被任何用户忽略
                 p["ignored_by"] = []
-                for email in self.user_weights.keys():
+                for email in self.email_to:
                     key = p.get("doi", "") or p.get("arxiv_id", "") or p.get("title", "")[:50]
                     if self.mufb.is_ignored_by_user(key, email):
                         p["ignored_by"].append(email)
@@ -97,7 +95,7 @@ class PaperFetcher:
             if hv.lower() in title:
                 score += 3
                 matched.append(f"[HIGH]{hv}")
-        # 用户兴趣画像加分
+        # 用户兴趣加分
         user_bonus = 0
         user_matched = []
         for email, weights in self.user_weights.items():
@@ -112,11 +110,7 @@ class PaperFetcher:
         return score, reason, ""
 
     def _fetch_pubmed(self, lookback_days: int) -> List[Dict]:
-        core_terms = [
-            "structural variation", "genome assembly", "mitochondrial genome",
-            "antifreeze protein", "Hi-C", "long-read sequencing", "Myrmecia",
-            "pig genome", "arthropod genomics", "TAD", "chromosome conformation"
-        ]
+        core_terms = ["structural variation", "genome assembly", "mitochondrial genome", "antifreeze protein", "Hi-C", "long-read sequencing", "Myrmecia", "pig genome", "arthropod genomics", "TAD", "chromosome conformation"]
         query_or = " OR ".join([f'"{t}"[Title/Abstract]' for t in core_terms])
         end_date = datetime.now().strftime("%Y/%m/%d")
         start_date = (datetime.now() - timedelta(days=lookback_days * 2)).strftime("%Y/%m/%d")
@@ -125,9 +119,7 @@ class PaperFetcher:
         log(f"PubMed query length: {len(full_query)} chars")
         try:
             esearch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
-            r = requests.get(esearch_url, params={
-                "db": "pubmed", "term": full_query, "retmax": 100, "retmode": "json"
-            }, timeout=30)
+            r = requests.get(esearch_url, params={"db": "pubmed", "term": full_query, "retmax": 100, "retmode": "json"}, timeout=30)
             r.raise_for_status()
             ids = r.json().get("esearchresult", {}).get("idlist", [])
             if not ids:
@@ -135,9 +127,7 @@ class PaperFetcher:
                 return []
             log(f"PubMed: {len(ids)} IDs found")
             efetch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
-            r2 = requests.get(efetch_url, params={
-                "db": "pubmed", "id": ",".join(ids), "retmode": "xml"
-            }, timeout=60)
+            r2 = requests.get(efetch_url, params={"db": "pubmed", "id": ",".join(ids), "retmode": "xml"}, timeout=60)
             r2.raise_for_status()
             root = ET.fromstring(r2.content)
             papers = []
@@ -158,22 +148,11 @@ class PaperFetcher:
                         last = author.find("LastName")
                         first = author.find("ForeName")
                         if last is not None:
-                            name = f"{last.text} {first.text if first is not None else ''}".strip()
-                            author_list.append(name)
+                            author_list.append(f"{last.text} {first.text if first is not None else ''}".strip())
                     authors = ", ".join(author_list[:3])
                     year_elem = article.find(".//PubDate/Year")
                     year = year_elem.text if year_elem is not None else ""
-                    papers.append({
-                        "title": title.strip(),
-                        "abstract": abstract.strip(),
-                        "doi": doi,
-                        "pmid": pmid,
-                        "journal": journal,
-                        "date": year,
-                        "authors": authors,
-                        "source": "PubMed",
-                        "url": f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/" if pmid else (f"https://doi.org/{doi}" if doi else "")
-                    })
+                    papers.append({"title": title.strip(), "abstract": abstract.strip(), "doi": doi, "pmid": pmid, "journal": journal, "date": year, "authors": authors, "source": "PubMed", "url": f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/" if pmid else (f"https://doi.org/{doi}" if doi else "")})
                 except Exception as e:
                     log(f"PubMed parse error: {e}")
                     continue
@@ -185,18 +164,11 @@ class PaperFetcher:
 
     def _fetch_arxiv(self, lookback_days: int) -> List[Dict]:
         categories = self.cfg.get_source_config("arxiv").get("categories", ["q-bio.GN", "q-bio.PE", "cs.LG"])
-        query_terms = " OR ".join([
-            "genome assembly", "structural variation", "SV calling",
-            "Hi-C scaffolding", "antifreeze protein", "arthropod", "mitochondrial"
-        ])
+        query_terms = " OR ".join(["genome assembly", "structural variation", "SV calling", "Hi-C scaffolding", "antifreeze protein", "arthropod", "mitochondrial"])
         papers = []
         for cat in categories:
             url = "http://export.arxiv.org/api/query"
-            params = {
-                "search_query": f"cat:{cat} AND ({query_terms})",
-                "start": 0, "max_results": 30,
-                "sortBy": "submittedDate", "sortOrder": "descending"
-            }
+            params = {"search_query": f"cat:{cat} AND ({query_terms})", "start": 0, "max_results": 30, "sortBy": "submittedDate", "sortOrder": "descending"}
             try:
                 r = requests.get(url, params=params, timeout=30)
                 r.raise_for_status()
@@ -213,17 +185,7 @@ class PaperFetcher:
                     pub_date = published.text[:10] if published is not None else ""
                     arxiv_id = id_url.split("/")[-1] if id_url else ""
                     authors = [a.text for a in entry.findall("atom:author/atom:name", ns) if a.text]
-                    papers.append({
-                        "title": title.replace("\n", " ").strip(),
-                        "abstract": abstract.replace("\n", " ").strip(),
-                        "doi": "",
-                        "arxiv_id": arxiv_id,
-                        "journal": f"arXiv:{cat}",
-                        "date": pub_date,
-                        "authors": ", ".join(authors[:3]),
-                        "source": "arXiv",
-                        "url": f"https://arxiv.org/abs/{arxiv_id}" if arxiv_id else id_url
-                    })
+                    papers.append({"title": title.replace("\n", " ").strip(), "abstract": abstract.replace("\n", " ").strip(), "doi": "", "arxiv_id": arxiv_id, "journal": f"arXiv:{cat}", "date": pub_date, "authors": ", ".join(authors[:3]), "source": "arXiv", "url": f"https://arxiv.org/abs/{arxiv_id}" if arxiv_id else id_url})
             except Exception as e:
                 log(f"arXiv fetch error for {cat}: {e}")
                 continue
@@ -236,12 +198,7 @@ class PaperFetcher:
         headers = {"x-api-key": api_key} if api_key else {}
         start_date = (datetime.now() - timedelta(days=lookback_days * 3)).strftime("%Y-%m-%d")
         url = "https://api.semanticscholar.org/graph/v1/paper/search"
-        params = {
-            "query": query,
-            "fields": "title,abstract,authors,year,venue,externalIds,openAccessPdf,url",
-            "limit": 30,
-            "publicationDateOrYear": start_date
-        }
+        params = {"query": query, "fields": "title,abstract,authors,year,venue,externalIds,openAccessPdf,url", "limit": 30, "publicationDateOrYear": start_date}
         try:
             r = requests.get(url, params=params, headers=headers, timeout=30)
             r.raise_for_status()
@@ -254,17 +211,7 @@ class PaperFetcher:
                 arxiv = ext_ids.get("ArXiv", "")
                 oa = p.get("openAccessPdf", {}) or {}
                 url_link = oa.get("url") or p.get("url") or (f"https://doi.org/{doi}" if doi else "") or (f"https://arxiv.org/abs/{arxiv}" if arxiv else "")
-                papers.append({
-                    "title": p.get("title", ""),
-                    "abstract": p.get("abstract", "") or "",
-                    "doi": doi,
-                    "arxiv_id": arxiv,
-                    "journal": p.get("venue", "N/A") or "N/A",
-                    "date": str(p.get("year", "")),
-                    "authors": ", ".join(authors_list),
-                    "source": "Semantic Scholar",
-                    "url": url_link
-                })
+                papers.append({"title": p.get("title", ""), "abstract": p.get("abstract", "") or "", "doi": doi, "arxiv_id": arxiv, "journal": p.get("venue", "N/A") or "N/A", "date": str(p.get("year", "")), "authors": ", ".join(authors_list), "source": "Semantic Scholar", "url": url_link})
             log(f"Semantic Scholar: {len(papers)} papers")
             return papers
         except Exception as e:
@@ -277,7 +224,4 @@ if __name__ == "__main__":
     fetcher = PaperFetcher()
     papers = fetcher.fetch_all(lookback_days=2)
     filtered = fetcher.score_and_filter(papers)
-    print(json_lib.dumps([
-        {"title": p["title"], "score": p.get("relevance_score"), "reason": p.get("match_reason")}
-        for p in filtered[:10]
-    ], ensure_ascii=False, indent=2))
+    print(json_lib.dumps([{"title": p["title"], "score": p.get("relevance_score"), "reason": p.get("match_reason")} for p in filtered[:10]], ensure_ascii=False, indent=2))

@@ -15,8 +15,6 @@ env:
 
 permissions:
   contents: write
-  actions: read
-  artifacts: write
 
 jobs:
   digest:
@@ -71,6 +69,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO_OWNER: ${{ github.repository_owner }}
           REPO_NAME: ${{ github.event.repository.name }}
+          FEEDBACK_MODE: ${{ secrets.FEEDBACK_MODE }}
+          FEEDBACK_WORKER_URL: ${{ secrets.FEEDBACK_WORKER_URL }}
           KEYWORDS_OVERRIDE: ${{ github.event.inputs.keywords_override }}
           MAX_EMAIL_PAPERS: "15"
           MIN_RELEVANCE_SCORE: "5"

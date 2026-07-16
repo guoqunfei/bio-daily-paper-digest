@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-GitHub Issues 反馈处理模块：
-- 读取用户提交的 [STAR] / [FOLLOW_UP] / [IGNORE] issues
-- 更新 multi_user_feedback.json 和 user_profile
-- 关闭已处理的 issues
-- 支持多用户独立画像
+GitHub Issues 反馈处理模块 + 多用户画像存储
 """
 
 import os
@@ -13,6 +9,7 @@ import re
 import json
 import sys
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import List, Dict, Tuple
 import requests
 
@@ -35,43 +32,28 @@ class GitHubFeedbackProcessor:
         if not self.token:
             return [], [], []
         issues = self._list_open_issues()
-        stars = []
-        follow_ups = []
-        ignores = []
+        stars, follow_ups, ignores = [], [], []
         for issue in issues:
             title = issue.get("title", "")
             body = issue.get("body", "")
             number = issue.get("number")
-            created_at = issue.get("created_at", "")
             match = re.match(r'^\[(STAR|FOLLOW_UP|IGNORE)\]\s*(.+)$', title, re.IGNORECASE)
             if not match:
                 continue
             action = match.group(1).upper()
             paper_key = match.group(2).strip()
             user_email = self._extract_user(body)
-            entry = {
-                "paper_key": paper_key,
-                "user_email": user_email,
-                "created_at": created_at,
-                "note": body,
-                "issue_number": number
-            }
-            if action == "STAR":
-                stars.append(entry)
-            elif action == "FOLLOW_UP":
-                follow_ups.append(entry)
-            elif action == "IGNORE":
-                ignores.append(entry)
+            entry = {"paper_key": paper_key, "user_email": user_email, "created_at": issue.get("created_at", ""), "note": body, "issue_number": number}
+            if action == "STAR": stars.append(entry)
+            elif action == "FOLLOW_UP": follow_ups.append(entry)
+            elif action == "IGNORE": ignores.append(entry)
             self._close_issue(number)
             log(f"Processed [{action}] {paper_key} from {user_email}")
         return stars, follow_ups, ignores
 
     def _list_open_issues(self) -> List[Dict]:
         url = f"{self.api_base}/issues"
-        headers = {
-            "Authorization": f"token {self.token}",
-            "Accept": "application/vnd.github.v3+json"
-        }
+        headers = {"Authorization": f"token {self.token}", "Accept": "application/vnd.github.v3+json"}
         params = {"state": "open", "labels": "feedback", "per_page": 100}
         try:
             r = requests.get(url, headers=headers, params=params, timeout=30)
@@ -85,13 +67,9 @@ class GitHubFeedbackProcessor:
 
     def _close_issue(self, number: int):
         url = f"{self.api_base}/issues/{number}"
-        headers = {
-            "Authorization": f"token {self.token}",
-            "Accept": "application/vnd.github.v3+json"
-        }
+        headers = {"Authorization": f"token {self.token}", "Accept": "application/vnd.github.v3+json"}
         try:
-            r = requests.patch(url, headers=headers, json={"state": "closed"}, timeout=30)
-            r.raise_for_status()
+            requests.patch(url, headers=headers, json={"state": "closed"}, timeout=30)
         except Exception as e:
             log(f"Error closing issue #{number}: {e}")
 
@@ -115,12 +93,7 @@ class MultiUserFeedbackStore:
                     return json.load(f)
             except (json.JSONDecodeError, IOError):
                 pass
-        return {
-            "version": 3,
-            "users": {},
-            "follow_ups": [],
-            "processed_issues": []
-        }
+        return {"version": 3, "users": {}, "follow_ups": [], "processed_issues": []}
 
     def save(self):
         with open(self.path, "w", encoding="utf-8") as f:
@@ -128,39 +101,21 @@ class MultiUserFeedbackStore:
 
     def get_or_create_user(self, email: str):
         if email not in self.data["users"]:
-            self.data["users"][email] = {
-                "starred_keywords": {},
-                "starred_count": 0,
-                "ignored_papers": [],
-                "created_at": datetime.now().isoformat()
-            }
+            self.data["users"][email] = {"starred_keywords": {}, "starred_count": 0, "ignored_papers": [], "created_at": datetime.now().isoformat()}
         return self.data["users"][email]
 
     def add_star(self, email: str, paper_key: str, paper_meta: Dict):
         user = self.get_or_create_user(email)
         user["starred_count"] = user.get("starred_count", 0) + 1
         text = f"{paper_meta.get('title', '')} {paper_meta.get('abstract', '')}".lower()
-        core_terms = [
-            "hifiasm", "yahs", "sniffles", "sniffles2", "bcftools", "truvari",
-            "myrmecia", "bull ant", "pig genome", "sus scrofa", "antifreeze protein",
-            "hi-c", "long-read", "pacbio", "nanopore", "chromosome-level", "busco",
-            "merqury", "purge_haplotigs", "nextpolish", "alphaFold", "gromacs"
-        ]
+        core_terms = ["hifiasm", "yahs", "sniffles", "sniffles2", "bcftools", "truvari", "myrmecia", "bull ant", "pig genome", "sus scrofa", "antifreeze protein", "hi-c", "long-read", "pacbio", "nanopore", "chromosome-level", "busco", "merqury", "purge_haplotigs", "nextpolish", "alphaFold", "gromacs", "cutesv", "svim", "pbsv", "canu", "flye", "juicer", "3d-dna", "salsa", "getorganelle", "mitos", "pore-c", "micro-c", "tad", "promoter-enhancer", "haplotype-resolved", "de novo assembly", "benchmark", "comparative genomics"]
         for term in core_terms:
             if term.lower() in text:
                 user["starred_keywords"][term] = user["starred_keywords"].get(term, 0) + 1
 
     def add_follow_up(self, email: str, paper_key: str, paper_meta: Dict, days: int = 3):
         due_date = (datetime.now() + timedelta(days=days)).strftime("%Y-%m-%d")
-        self.data["follow_ups"].append({
-            "paper_key": paper_key,
-            "user_email": email,
-            "created_at": datetime.now().isoformat(),
-            "due_date": due_date,
-            "paper_title": paper_meta.get("title", paper_key),
-            "paper_url": paper_meta.get("url", ""),
-            "status": "pending"
-        })
+        self.data["follow_ups"].append({"paper_key": paper_key, "user_email": email, "created_at": datetime.now().isoformat(), "due_date": due_date, "paper_title": paper_meta.get("title", paper_key), "paper_url": paper_meta.get("url", ""), "status": "pending"})
 
     def add_ignore(self, email: str, paper_key: str):
         user = self.get_or_create_user(email)
@@ -169,12 +124,10 @@ class MultiUserFeedbackStore:
 
     def get_due_follow_ups(self, email: str = None) -> List[Dict]:
         today = datetime.now().strftime("%Y-%m-%d")
-        due = []
-        for fu in self.data.get("follow_ups", []):
-            if fu.get("status") == "pending" and fu.get("due_date", "") <= today:
-                if email is None or fu.get("user_email") == email:
-                    due.append(fu)
-        return due
+        return [fu for fu in self.data.get("follow_ups", []) if fu.get("status") == "pending" and fu.get("due_date", "") <= today and (email is None or fu.get("user_email") == email)]
+
+    def get_all_pending_follow_ups(self, email: str = None) -> List[Dict]:
+        return [fu for fu in self.data.get("follow_ups", []) if fu.get("status") == "pending" and (email is None or fu.get("user_email") == email)]
 
     def mark_follow_up_done(self, paper_key: str, email: str):
         for fu in self.data.get("follow_ups", []):
@@ -189,10 +142,7 @@ class MultiUserFeedbackStore:
         total = user.get("starred_count", 0)
         if not keywords or total == 0:
             return {}
-        weights = {}
-        for kw, count in keywords.items():
-            weights[kw] = min(count / total * 5, 3.0)
-        return weights
+        return {kw: min(count / total * 5, 3.0) for kw, count in keywords.items()}
 
     def is_ignored_by_user(self, paper_key: str, email: str) -> bool:
         user = self.data["users"].get(email)
@@ -200,7 +150,7 @@ class MultiUserFeedbackStore:
             return False
         return paper_key in user.get("ignored_papers", [])
 
-    def get_recent_starred_context(self, email: str, n: int = 3) -> List[Dict]:
+    def get_recent_starred_context(self, email: str, n: int = 5) -> List[Dict]:
         starred = []
         for k, v in self.data.get("users", {}).get(email, {}).get("starred_keywords", {}).items():
             starred.append((v, k))

@@ -35,7 +35,7 @@ email:
   smtp_port: 25
   smtp_user: ""         # Override via SMTP_USER env
   smtp_password: ""     # Override via SMTP_PASSWORD env
-  receivers: []         # Override via EMAIL_RECEIVER env
+  receivers: []         # Override via EMAIL_TO env
   subject_template: "[Bio-Digest] {date} Literature Digest ({count} papers)"
   send_time: "09:00"
 

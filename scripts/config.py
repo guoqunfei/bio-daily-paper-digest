@@ -46,7 +46,7 @@ class Config:
             "SMTP_PORT": ["email", "smtp_port"],
             "SMTP_USER": ["email", "smtp_user"],
             "SMTP_PASSWORD": ["email", "smtp_password"],
-            "EMAIL_RECEIVER": ["email", "receivers"],
+            "EMAIL_TO": ["email", "receivers"],
             "OPENAI_API_KEY": ["llm", "api_key"],
             "OPENAI_BASE_URL": ["llm", "base_url"],
             "OPENAI_MODEL": ["llm", "model"],

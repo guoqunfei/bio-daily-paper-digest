@@ -156,7 +156,7 @@ bio-daily-paper-digest/
 | `SMTP_PORT` | SMTP 端口 | `25` 或 `465` |
 | `SMTP_USER` | 发件邮箱地址 | `guoqunfei@genomics.cn` |
 | `SMTP_PASSWORD` | 邮箱密码/授权码 | `your_password` |
-| `EMAIL_RECEIVER` | 收件邮箱（可多个，逗号分隔） | `user@example.com` |
+| `EMAIL_TO` | 收件邮箱（可多个，逗号分隔） | `user@example.com` |
 | `OPENAI_API_KEY` | LLM API Key | `sk-...` |
 | `OPENAI_BASE_URL` | LLM API 基础地址 | `https://api.openai.com/v1` |
 | `OPENAI_MODEL` | LLM 模型名称 | `gpt-4o-mini` |

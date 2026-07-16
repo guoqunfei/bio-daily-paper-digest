@@ -24,7 +24,7 @@ class EmailSender:
         self.port = int(port or os.environ.get("SMTP_PORT", "25"))
         self.user = user or os.environ.get("SMTP_USER", "")
         self.password = password or os.environ.get("SMTP_PASSWORD", "")
-        receivers_str = os.environ.get("EMAIL_RECEIVER", "")
+        receivers_str = os.environ.get("EMAIL_TO", "")
         self.receivers = receivers or [r.strip() for r in receivers_str.split(",") if r.strip()]
         self.enabled = all([self.server, self.user, self.password, self.receivers])
 

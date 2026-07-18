@@ -1,0 +1,13 @@
+[
+  {
+    "source": "bioRxiv",
+    "title": "A near-complete genome assembly of the Fusarium oxysporum keratitis isolate MRL8996",
+    "authors": "Doddi, A., Puebla-Planas, G., Lopez-Berges, M. S. et al.",
+    "abstract": "Fusarium oxysporum MRL8996 is a fungal strain isolated from a severe case of contact lens-associated keratitis. Here we report a near-complete genome assembly of this isolate using a hybrid Nanopore and Hi-C scaffolding approach. The assembly resolves the genome into 16 distinct chromosomes, including 11 core and 5 lineage-specific chromosomes. This high-quality reference genome provides an unprecedented tool for investigating the large-scale structural variations and evolutionary mechanisms dri",
+    "published": "2026-07-11",
+    "url": "https://doi.org/10.64898/2026.07.06.736765",
+    "doi": "10.64898/2026.07.06.736765",
+    "relevance_score": 8.5,
+    "relevance_reason": "高优先级关键词: structural variation, genome assembly, scaffolding; 白名单关键词: structural variation, genome assembly, nanopore"
+  }
+]

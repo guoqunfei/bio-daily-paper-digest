@@ -1,0 +1,24 @@
+[
+  {
+    "source": "arXiv",
+    "title": "ExpertVerse: A General-Purpose Benchmark for Expert-Level Reasoning in Knowledge-Intensive Visual Synthesis",
+    "authors": "Yuan Wang, Yongchao Du, Mengting Chen et al.",
+    "abstract": "Recent advances in multimodal generative models have enabled instruction-based image generation to move beyond semantic manipulation to knowledge-driven visual reasoning. However, these methods focus on explicit commonsense reasoning, shallow causal understanding, and direct knowledge recall, failing at knowledge-intensive generation. We develop \\textbf{ExpertVerse}, a capability-centric benchmark to evaluate generative models via knowledge-intensive lens. ExpertVerse stratifies reasoning genera",
+    "published": "2026-07-21",
+    "url": "https://arxiv.org/pdf/2607.19341v1",
+    "doi": "",
+    "relevance_score": 4.8,
+    "relevance_reason": "白名单关键词: benchmark; 目标物种: ant"
+  },
+  {
+    "source": "PubMed",
+    "title": "Hi-C informed kernel association test for integrating 3D genome structure into variant-set analysis.",
+    "authors": "Huang Y, Basu R, Cheng Y et al.",
+    "abstract": "",
+    "published": "2026 Jul 3",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42480046/",
+    "doi": "pii: bbag390. doi: 10.1093/bib/bbag390",
+    "relevance_score": 4.6,
+    "relevance_reason": "白名单关键词: hi-c, 3d genome; 目标物种: ant"
+  }
+]

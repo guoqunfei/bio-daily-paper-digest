@@ -1,0 +1,24 @@
+[
+  {
+    "source": "PubMed",
+    "title": "A chromosome-level genome assembly of the bluethroat (Luscinia s. svecica; Linnaeus, 1758) uncovers the complex MHC region.",
+    "authors": "Strand MA, Enevoldsen ELG, Tørresen OK et al.",
+    "abstract": "",
+    "published": "2026 Jul 2",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42485452/",
+    "doi": "pii: esag058. doi: 10.1093/jhered/esag058",
+    "relevance_score": 6.1,
+    "relevance_reason": "高优先级关键词: genome assembly; 白名单关键词: genome assembly, chromosome-level"
+  },
+  {
+    "source": "bioRxiv",
+    "title": "Gene model for the ortholog of DENR in Drosophila grimshawi",
+    "authors": "Lawson, M. E., Sanow, K. A., Fratian, M. et al.",
+    "abstract": "Gene model for the ortholog of Density regulated protein (DENR) in the May 2011 (Agencourt dgri_caf1/DgriCAF1) Genome Assembly (GenBank Accession: GCA_000005155.1) of D. grimshawi. This ortholog was characterized as part of a developing dataset to study the evolution of the Insulin/insulin-like growth factor signaling pathway (IIS) across the genus Drosophila using the Genomics Education Partnership gene annotation protocol for Course-based Undergraduate Research Experiences.",
+    "published": "2026-07-16",
+    "url": "https://doi.org/10.64898/2026.07.14.738501",
+    "doi": "10.64898/2026.07.14.738501",
+    "relevance_score": 5.3,
+    "relevance_reason": "高优先级关键词: genome assembly; 白名单关键词: genome assembly"
+  }
+]

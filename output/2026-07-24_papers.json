@@ -1,0 +1,24 @@
+[
+  {
+    "source": "bioRxiv",
+    "title": "Optimizing a Culture-Enriched Hybrid Metagenomics Pipeline to Assess the AMR Footprint of Livestock Manure in Anaerobic Digestate",
+    "authors": "Rahman, N., Rahman, A. S. M. Z., Levin, D. B. et al.",
+    "abstract": "The role of environmental samples from livestock production systems, including manure and anaerobic digestate, as reservoirs of antimicrobial resistance genes (ARGs) is likely underestimated because conventional metagenomic approaches can overlook low-abundance ARGs and often lack the resolution needed to reliably associate these genes with their microbial hosts and linked mobile genetic elements (MGEs). Here, we evaluated whether culture-enriched metagenomics (CEMG), with and without antibiotic",
+    "published": "2026-07-17",
+    "url": "https://doi.org/10.64898/2026.04.24.720626",
+    "doi": "10.64898/2026.04.24.720626",
+    "relevance_score": 4.8,
+    "relevance_reason": "白名单关键词: pipeline; 目标物种: ant"
+  },
+  {
+    "source": "PubMed",
+    "title": "A spatiotemporal single-cell atlas of porcine development reveals regulatory dynamics and cellular targets of domestication.",
+    "authors": "Zhou R, Wang Z, Hu C et al.",
+    "abstract": "",
+    "published": "2026 Jun",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42491502/",
+    "doi": "doi: 10.1002/imt2.70135",
+    "relevance_score": 4.3,
+    "relevance_reason": "白名单关键词: porcine; 目标物种: porcine"
+  }
+]

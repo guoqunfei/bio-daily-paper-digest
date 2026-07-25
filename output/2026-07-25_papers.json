@@ -1,0 +1,35 @@
+[
+  {
+    "source": "PubMed",
+    "title": "Genomic structural variation rescues a classic biological invader from a population bottleneck.",
+    "authors": "Osborne CA, Foote BM, Fleck SJ et al.",
+    "abstract": "",
+    "published": "2026 Jul 2",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42497265/",
+    "doi": "doi: 10.1126/sciadv.aed3656",
+    "relevance_score": 5.8,
+    "relevance_reason": "高优先级关键词: structural variation; 白名单关键词: structural variation"
+  },
+  {
+    "source": "PubMed",
+    "title": "Unheralded high MHC class II polymorphism in the abundant Atlantic herring resolved by long-read sequencing.",
+    "authors": "Jamsandekar M, Mohamadnejad Sangdehi F, Berg F et al.",
+    "abstract": "",
+    "published": "2026 Jul 2",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42497266/",
+    "doi": "doi: 10.1126/sciadv.aea2862",
+    "relevance_score": 4.3,
+    "relevance_reason": "白名单关键词: long-read sequencing; 目标物种: ant"
+  },
+  {
+    "source": "PubMed",
+    "title": "Comparative genomics of herpes simplex virus 2 isolated from a maternal-neonatal dyad reveals high consensus sequence homology as well as minor variant diversity.",
+    "authors": "Rass RA, Simons LM, Bowen CD et al.",
+    "abstract": "",
+    "published": "2026 Jul 2",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42497092/",
+    "doi": "pii: piag064. doi: 10.1093/jpids/piag064",
+    "relevance_score": 4.3,
+    "relevance_reason": "白名单关键词: comparative genomics; 目标物种: ant"
+  }
+]

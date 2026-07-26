@@ -1,0 +1,13 @@
+[
+  {
+    "source": "PubMed",
+    "title": "BCAR: A fast and indel-tolerant barcode-sequence mapper.",
+    "authors": "Andrews B, Ranganathan R",
+    "abstract": "",
+    "published": "2026 Jul 2",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42500985/",
+    "doi": "pii: btag557. doi: 10.1093/bioinformatics/btag557",
+    "relevance_score": 4.3,
+    "relevance_reason": "白名单关键词: indel; 目标物种: ant"
+  }
+]

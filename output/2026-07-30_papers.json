@@ -1,0 +1,35 @@
+[
+  {
+    "source": "bioRxiv",
+    "title": "Hobrac: a reference-guided workflow for genome comparison and synteny visualization",
+    "authors": "Istace, B., Denoeud, F., Teodori, E. et al.",
+    "abstract": "Whole-genome comparison is fundamental for validating genome assemblies and investigating genome evolution, yet identifying suitable reference genomes and interpreting chromosome-scale synteny from often noisy nucleotide alignments remain challenging. We introduce Hobrac, an automated workflow that addresses these two major bottlenecks by combining automated reference genome selection with gene-based structural comparisons. Starting from a genome assembly and its taxon identifier, Hobrac identif",
+    "published": "2026-07-23",
+    "url": "https://doi.org/10.64898/2026.07.17.739168",
+    "doi": "10.64898/2026.07.17.739168",
+    "relevance_score": 6.6,
+    "relevance_reason": "高优先级关键词: genome assembly; 白名单关键词: genome assembly, workflow"
+  },
+  {
+    "source": "PubMed",
+    "title": "Parallel expansion of trehalose transporter genes integrates intestinal energy metabolism with developmental growth in lepidopteran insects.",
+    "authors": "Lu Q, Zhou Y, Liang Y et al.",
+    "abstract": "",
+    "published": "2026 Jul 2",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42525917/",
+    "doi": "pii: msag170. doi: 10.1093/molbev/msag170",
+    "relevance_score": 4.3,
+    "relevance_reason": "白名单关键词: insect; 目标物种: insect"
+  },
+  {
+    "source": "PubMed",
+    "title": "SynFlow: an interactive online genome structural variant viewer.",
+    "authors": "Summo M, Droc G, Rouard M et al.",
+    "abstract": "",
+    "published": "2026 Jul 2",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42525384/",
+    "doi": "pii: btag567. doi: 10.1093/bioinformatics/btag567",
+    "relevance_score": 4.3,
+    "relevance_reason": "白名单关键词: structural variant; 目标物种: ant"
+  }
+]

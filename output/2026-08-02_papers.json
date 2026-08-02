@@ -1,0 +1,13 @@
+[
+  {
+    "source": "PubMed",
+    "title": "EXCAVATE-HT: A Bioinformatic Pipeline to Identify Targetable Genomic Variants for Allele-Specific Editing.",
+    "authors": "Saxena AG, Ramey GD, Capra JA et al.",
+    "abstract": "",
+    "published": "2026 Jul 2",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42539204/",
+    "doi": "pii: 2026.07.23.739930. doi: 10.64898/2026.07.23.739930",
+    "relevance_score": 4.3,
+    "relevance_reason": "白名单关键词: pipeline; 目标物种: ant"
+  }
+]

@@ -1,0 +1,24 @@
+[
+  {
+    "source": "arXiv",
+    "title": "onepot-Bench 0: towards lab-aware in silico chemistry benchmarks",
+    "authors": "Brandon Wang, Andrei S. Tyrin, Daniil A. Boiko",
+    "abstract": "Language models are playing an increasingly important role in laboratory science, performing tasks such as experiment planning, execution, and post-hoc analysis. However, precisely measuring their abilities is difficult, as scientific capabilities require a mixture of both problem-solving skills and domain-specific intuition. Existing evaluations rarely measure the capabilities required to make reliable decisions in a physical laboratory and often rely on public data that may have appeared in mo",
+    "published": "2026-08-03",
+    "url": "https://arxiv.org/pdf/2608.02595v1",
+    "doi": "",
+    "relevance_score": 4.8,
+    "relevance_reason": "白名单关键词: benchmark; 目标物种: ant"
+  },
+  {
+    "source": "bioRxiv",
+    "title": "H4K20me3 and CTCF act reciprocally at TAD boundaries to regulate cell state transitions",
+    "authors": "Atai, K., Mitra, M., Bohn, E. et al.",
+    "abstract": "Reversible transitions between proliferative and quiescent cell states involve widespread gene expression changes despite stable topologically associating domain (TAD) positioning. We report a reciprocal antagonism between TAD boundary element CTCF and histone modification H4K20me3 as a central mechanism governing the proliferation-quiescence transition. Genome-wide studies and functional perturbations reveal that elevated H4K20me3 in quiescent fibroblasts displaces CTCF at specific TAD boundari",
+    "published": "2026-07-28",
+    "url": "https://doi.org/10.64898/2026.01.29.702647",
+    "doi": "10.64898/2026.01.29.702647",
+    "relevance_score": 4.8,
+    "relevance_reason": "白名单关键词: tad; 目标物种: ant"
+  }
+]

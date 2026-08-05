@@ -1,0 +1,24 @@
+[
+  {
+    "source": "PubMed",
+    "title": "De novo Genome Assembly of a Native Saccharomyces cerevisiae Strain Isolated from Spontaneous Fermentation of Vineyard Must in the Atacama Desert (Chile).",
+    "authors": "Aguayo-Cumplido H, Cifras M, Lanino M et al.",
+    "abstract": "",
+    "published": "2026 Aug 4",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42550485/",
+    "doi": "pii: foag033. doi: 10.1093/femsyr/foag033",
+    "relevance_score": 5.8,
+    "relevance_reason": "高优先级关键词: genome assembly; 白名单关键词: genome assembly"
+  },
+  {
+    "source": "arXiv",
+    "title": "Semantic Bundling: Interactive Node and Edge Bundling to Simplify Knowledge Graphs using Large Language Models",
+    "authors": "Adam Coscia, Zeyu Hua, Eric Krokos et al.",
+    "abstract": "We present Semantic Bundling, a visual analytics technique for making sense of text documents represented as knowledge graphs (KGs). Representing a document corpus as a KG makes relationships between entities explicit, making KGs useful both to analyze directly and in computational workflows including ML pipelines and generative AI backends. However, as KGs grow they become difficult to interpret and visualize for specific tasks (e.g., the ``hairball problem''), with the meaning of each relation",
+    "published": "2026-08-04",
+    "url": "https://arxiv.org/pdf/2608.04002v1",
+    "doi": "",
+    "relevance_score": 4.1,
+    "relevance_reason": "白名单关键词: pipeline, workflow; 目标物种: ant"
+  }
+]

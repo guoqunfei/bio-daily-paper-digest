@@ -1,0 +1,13 @@
+[
+  {
+    "source": "bioRxiv",
+    "title": "A revised genome annotation of the model cyanobacterium Synechocystis based on start and stop codon-enriched ribosome profiling and proteogenomics",
+    "authors": "Hadjeras, L., Krauspe, V., Gelhausen, R. et al.",
+    "abstract": "Cyanobacteria are important primary producers and are used as microbial cell factories due to their ability to use solar light for oxygenic photosynthesis. Synechocystis sp. PCC 6803 is a popular model cyanobacterium, yet there are ambiguities in the precise coding regions of many genes, and numerous genes encoding small proteins have remained undetected. Here we present the results of a riboproteogenomic analysis, combining ribosome profiling (Ribo-seq) analysis involving inhibitors that stall ",
+    "published": "2026-07-30",
+    "url": "https://doi.org/10.64898/2025.12.20.695498",
+    "doi": "10.64898/2025.12.20.695498",
+    "relevance_score": 4.8,
+    "relevance_reason": "白名单关键词: genome annotation; 目标物种: ant"
+  }
+]

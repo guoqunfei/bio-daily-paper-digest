@@ -1,0 +1,24 @@
+[
+  {
+    "source": "bioRxiv",
+    "title": "Variation of anti-oomycete activity in Pseudomonas spp.: phenotypic characterization and comparative genomics",
+    "authors": "Saric, E., Miljanovic, A., Struski, P. et al.",
+    "abstract": "Pathogenic aquatic oomycetes Aphanomyces astaci and Saprolegnia parasitica represent a major threat to biodiversity and aquaculture production, but their interactions with host-associated microbes remain poorly understood. From a collection of bacterial isolates (n = 328) obtained from fish and crayfish hosts, we focused on Pseudomonas spp. (n = 66) and confirmed their previously reported strong inhibitory potential against A. astaci and S. parasitica. However, our results also revealed substant",
+    "published": "2026-08-01",
+    "url": "https://doi.org/10.64898/2026.04.24.720349",
+    "doi": "10.64898/2026.04.24.720349",
+    "relevance_score": 4.8,
+    "relevance_reason": "白名单关键词: comparative genomics; 目标物种: ant"
+  },
+  {
+    "source": "PubMed",
+    "title": "VCboost: reducing false positives in long-read variant calling for single-nucleotide polymorphism and indel detection in challenging genomic regions.",
+    "authors": "Zhang Y, Chen H, Liu X et al.",
+    "abstract": "",
+    "published": "2026 Jul 3",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42566707/",
+    "doi": "pii: bbag405. doi: 10.1093/bib/bbag405",
+    "relevance_score": 4.3,
+    "relevance_reason": "白名单关键词: indel; 目标物种: ant"
+  }
+]

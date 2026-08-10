@@ -1,0 +1,13 @@
+[
+  {
+    "source": "arXiv",
+    "title": "HST imaging, pipeline modeling, and time-delay predictions of 2 triply-imaged and 15 quadruply-imaged lensed quasars",
+    "authors": "William Sheu, Tommaso Treu, Adriano Agnello et al.",
+    "abstract": "The Hubble-Lemaître tension remains a significant challenge in modern cosmology, exhibiting a discrepancy between early-Universe cosmic microwave background measurements and local distance ladder observations. Strong lensing time-delay cosmography provides an independent, geometric probe of $H_0$ that can help resolve this discrepancy. Although hundreds of lensed quasars have been discovered, only a handful have been analyzed due to the resource-intensive follow-up required to measure precise ti",
+    "published": "2026-08-07",
+    "url": "https://arxiv.org/pdf/2608.07470v1",
+    "doi": "",
+    "relevance_score": 4.8,
+    "relevance_reason": "白名单关键词: pipeline; 目标物种: ant"
+  }
+]

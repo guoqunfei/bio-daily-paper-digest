@@ -1,0 +1,24 @@
+[
+  {
+    "source": "PubMed",
+    "title": "A chromosome-level genome assembly of Thecaphora frezzii, cause of peanut smut, reveals the largest genome of the true smut fungi.",
+    "authors": "Greatens N, Couger MB, Maestro M et al.",
+    "abstract": "",
+    "published": "2026 Aug 1",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42574651/",
+    "doi": "pii: jkag217. doi: 10.1093/g3journal/jkag217",
+    "relevance_score": 6.1,
+    "relevance_reason": "高优先级关键词: genome assembly; 白名单关键词: genome assembly, chromosome-level"
+  },
+  {
+    "source": "bioRxiv",
+    "title": "A benchmarking framework for single-cell genome-scale metabolic model construction",
+    "authors": "Yang, J., Deng, Y., Luo, J. et al.",
+    "abstract": "Single-cell genome-scale metabolic models (scGEMs) enable characterization of metabolic heterogeneity underlying cellular states and phenotypes. However, methodological choices during scGEM construction can substantially alter model structure and predictions, challenging the reliability and comparability of resulting analyses. Here, we established a systematic benchmark to assess three key construction factors: data preprocessing method, model extraction method (MEM) and gene expression threshol",
+    "published": "2026-08-04",
+    "url": "https://doi.org/10.64898/2026.08.02.742346",
+    "doi": "10.64898/2026.08.02.742346",
+    "relevance_score": 4.8,
+    "relevance_reason": "白名单关键词: benchmark; 目标物种: ant"
+  }
+]

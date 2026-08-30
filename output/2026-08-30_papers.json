@@ -1,0 +1,13 @@
+[
+  {
+    "source": "PubMed",
+    "title": "Protocol for haplotype-resolved structural variant detection via long-read sequencing using cuteHap.",
+    "authors": "Cao S, Wu C, He Y et al.",
+    "abstract": "",
+    "published": "2026 Aug 2",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42667620/",
+    "doi": "doi: 10.1016/j.xpro.2026.104810",
+    "relevance_score": 4.6,
+    "relevance_reason": "白名单关键词: long-read sequencing, structural variant; 目标物种: ant"
+  }
+]

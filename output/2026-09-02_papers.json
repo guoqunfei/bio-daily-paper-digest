@@ -1,0 +1,35 @@
+[
+  {
+    "source": "arXiv",
+    "title": "Efficient SWE Agent Benchmarking via Trajectory-Aware Evaluation",
+    "authors": "Kefeng Duan, Dewu Zheng, Yanlin Wang et al.",
+    "abstract": "Evaluating software engineering agents on realistic benchmarks is costly, since each task may require multi-step code exploration, modification, and test execution. Existing efficient evaluation methods select representative subsets to estimate full-benchmark performance, but are largely result-only: they fit historical pass/fail response matrices or static task semantics, discarding how agents solve problems. We propose PTA-IRT, a Privileged Trajectory-Aware Item Response Theory framework that ",
+    "published": "2026-09-01",
+    "url": "https://arxiv.org/pdf/2609.01603v1",
+    "doi": "",
+    "relevance_score": 4.8,
+    "relevance_reason": "白名单关键词: benchmark; 目标物种: ant"
+  },
+  {
+    "source": "PubMed",
+    "title": "Variants in the Imprinted IGF2 Gene: A Review and Phasing of De Novo Variants Using Long-Read Sequencing.",
+    "authors": "Juul TM, Boonen SE, Pedersen KV et al.",
+    "abstract": "",
+    "published": "2026 Sep 1",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42680700/",
+    "doi": "doi: 10.1111/cge.70239",
+    "relevance_score": 4.3,
+    "relevance_reason": "白名单关键词: long-read sequencing; 目标物种: ant"
+  },
+  {
+    "source": "PubMed",
+    "title": "Long-read sequencing reveals widespread novel splicing and neojunction-derived neoantigens in nasopharyngeal carcinoma.",
+    "authors": "Shuai Y, Yao H, Wang B et al.",
+    "abstract": "",
+    "published": "2026 Sep 1",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42680560/",
+    "doi": "doi: 10.1101/gr.281467.125",
+    "relevance_score": 4.3,
+    "relevance_reason": "白名单关键词: long-read sequencing; 目标物种: ant"
+  }
+]

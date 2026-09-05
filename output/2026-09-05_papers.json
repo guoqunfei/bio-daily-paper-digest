@@ -1,0 +1,24 @@
+[
+  {
+    "source": "bioRxiv",
+    "title": "Chasing amylase: genotypic diversity in Geukensia demissa may be environmentally driven",
+    "authors": "White, P. N., Ewers, C., Wares, J. P.",
+    "abstract": "Prior results suggested an unusual sequence polymorphism in an amylase gene region of the ribbed mussel Geukensia demissa. We used targeted sequencing, spatial analysis of polymorphism data and a high-quality de novo genome assembly to assess the likelihood that this diversity is inherited as a single Mendelian locus. Our results suggest this is likely, and that the frequencies of the dominant allele groups change dramatically along the Atlantic coast of the United States, particularly across Ca",
+    "published": "2026-08-29",
+    "url": "https://doi.org/10.1101/2025.07.21.665945",
+    "doi": "10.1101/2025.07.21.665945",
+    "relevance_score": 7.3,
+    "relevance_reason": "高优先级关键词: genome assembly; 白名单关键词: genome assembly; 目标物种: ant"
+  },
+  {
+    "source": "bioRxiv",
+    "title": "Robust taxonomic classification in gut and vaginal microbiomes demonstrated through benchmarking with age-specific synthetic communities",
+    "authors": "Trachsel, J. M., Sturgeon, H., Goad, D. et al.",
+    "abstract": "Accurate taxonomic profiling of human microbiomes is essential for advancing research and understanding the complex role microbial communities play in human health. When using shotgun metagenomics, the sequencing data is analyzed through metagenomic pipelines, which incorporate various open-source tools and classify microbes based on matched paired-end DNA reads. However, differences in sequencing and computational approaches can produce substantially different microbiome profiles from the same ",
+    "published": "2026-08-29",
+    "url": "https://doi.org/10.64898/2026.07.06.736764",
+    "doi": "10.64898/2026.07.06.736764",
+    "relevance_score": 5.1,
+    "relevance_reason": "白名单关键词: benchmark, pipeline; 目标物种: ant"
+  }
+]

@@ -1,0 +1,13 @@
+[
+  {
+    "source": "bioRxiv",
+    "title": "scPyviewer: a Python-native interactive viewer from AnnData single-cell data",
+    "authors": "Xuan, H., Huang, Y., Bian, J. et al.",
+    "abstract": "Motivation: Interactive tools that let non-programmers explore an analyzed single-cell dataset, its embeddings, gene expression, cell metadata, and marker genes, have become standard laboratory infrastructure. Every actively maintained tool in this space (ShinyCell, ScRDAVis, sCIRCLE, scViewer) is built on R Shiny and requires a Seurat object as input. Laboratories whose primary analysis pipeline is Python/scanpy, the dominant framework for single-cell RNA-seq, spatial, and multi-omic analysis, ",
+    "published": "2026-08-31",
+    "url": "https://doi.org/10.64898/2026.08.26.747418",
+    "doi": "10.64898/2026.08.26.747418",
+    "relevance_score": 4.1,
+    "relevance_reason": "白名单关键词: tad, pipeline; 目标物种: ant"
+  }
+]

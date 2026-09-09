@@ -1,0 +1,24 @@
+[
+  {
+    "source": "arXiv",
+    "title": "Co-Evolving Harnesses and Models: On-Policy Correction Helps Weaker Models Catch Up Where Imitation Fails",
+    "authors": "Zhou Yu, Bin Bi, Shiva Kumar Pentyala et al.",
+    "abstract": "Agent harnesses (the system prompt, tool set, execution hooks, and context-management scaffolding around a model) are a critical determinant of agentic task success. Automated harness evolution can enable smaller models to perform well on domain-specific tasks at a fraction of frontier-model cost. Since both the harness and model weights shape behavior, we ask how harness evolution and lightweight fine-tuning should be combined. Across seven enterprise agent tasks, we first evolve a harness with",
+    "published": "2026-09-08",
+    "url": "https://arxiv.org/pdf/2609.09134v1",
+    "doi": "",
+    "relevance_score": 7.3,
+    "relevance_reason": "高优先级关键词: scaffolding; 白名单关键词: scaffolding; 目标物种: ant"
+  },
+  {
+    "source": "PubMed",
+    "title": "DNA methylation-based ageing in a deuterostome invertebrate: an epigenetic clock for the crown-of-thorns seastar (Acanthaster cf. solaris).",
+    "authors": "Kwong SLT, Budd AM, Gomez-Cabrera M et al.",
+    "abstract": "",
+    "published": "2026 Sep 7",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42710879/",
+    "doi": "pii: 20260265. doi: 10.1098/rsbl.2026.0265",
+    "relevance_score": 4.3,
+    "relevance_reason": "白名单关键词: invertebrate; 目标物种: ant, pig"
+  }
+]

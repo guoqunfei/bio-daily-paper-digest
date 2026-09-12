@@ -1,0 +1,35 @@
+[
+  {
+    "source": "bioRxiv",
+    "title": "A chromosome-scale genome assembly of the Swiss Lolium multiflorum ecotype Tremona reveals a scalable method to purge spurious duplications",
+    "authors": "Piat, L., Herren, G., Grieder, C. et al.",
+    "abstract": "Italian ryegrass (Lolium multiflorum) is a key temperate forage species underpinning livestock production in Europe. Genomic resources remain limited by its large (2.2 Gb), repetitive, and highly heterozygous genome. Here, we present a high-quality chromosome-scale genome assembly of the Swiss L. multiflorum ecotype Tremona, collected in 2008 in Ticino, Switzerland, and subsequently incorporated into recurrent breeding cycles in the Swiss breeding program. To address systematic assembly artefact",
+    "published": "2026-09-05",
+    "url": "https://doi.org/10.64898/2026.08.18.745395",
+    "doi": "10.64898/2026.08.18.745395",
+    "relevance_score": 6.3,
+    "relevance_reason": "高优先级关键词: genome assembly; 白名单关键词: genome assembly"
+  },
+  {
+    "source": "bioRxiv",
+    "title": "Relational Graph Convolutional Networks for Glioblastoma Biomarker Discovery via ceRNA and Copy Number Variation Analysis",
+    "authors": "Khandelwal, S., Zhan, J., Jarvis, N.",
+    "abstract": "Glioblastoma (GBM) is a highly aggressive brain tumor with a five-year survival rate of 6.9%, attributable in substantial part to the shortage of reliable biomarkers. Competing endogenous RNA (ceRNA) and copy number variation (CNV) analyses each carry biomarker-identification potential, but existing work treats them separately and does not integrate multiple regulatory mechanisms. We therefore applied relational graph convolutional networks (RGCNs) to ceRNA and CNV knowledge graphs under a late-",
+    "published": "2026-09-05",
+    "url": "https://doi.org/10.64898/2026.08.16.744525",
+    "doi": "10.64898/2026.08.16.744525",
+    "relevance_score": 4.8,
+    "relevance_reason": "白名单关键词: copy number variation; 目标物种: ant"
+  },
+  {
+    "source": "PubMed",
+    "title": "Long-read sequencing resolves complex CYP21A2 variants and identifies 2+0 carriers in 21-hydroxylase deficiency.",
+    "authors": "Xia Y, Cui D, Li D et al.",
+    "abstract": "",
+    "published": "2026 Sep 1",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42727689/",
+    "doi": "pii: S1525-1578(26)00158-3. doi: 10.1016/j.jmoldx.2026.08.004",
+    "relevance_score": 4.3,
+    "relevance_reason": "白名单关键词: long-read sequencing; 目标物种: ant"
+  }
+]

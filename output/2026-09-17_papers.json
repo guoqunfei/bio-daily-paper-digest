@@ -1,0 +1,24 @@
+[
+  {
+    "source": "bioRxiv",
+    "title": "Systematic benchmarking of small variant calling pipelines for long-read RNA sequencing data",
+    "authors": "Wang, J., Robinson, M. D.",
+    "abstract": "Background: Long-read RNA sequencing (lrRNA-seq) enables transcript-resolved variant detection, but systematic and neutral evaluations of small variants calling pipelines remain limited. The performance of existing tools across sequencing technologies, alignment strategy, variant caller choice, genomic contexts and downstream haplotype phasing is not fully understood. Results: Here, we systematically benchmark four lrRNA-seq variant callers (Clair3-RNA, DeepVariant, longcallR, and longcallR-nn),",
+    "published": "2026-09-10",
+    "url": "https://doi.org/10.64898/2026.04.29.721619",
+    "doi": "10.64898/2026.04.29.721619",
+    "relevance_score": 5.1,
+    "relevance_reason": "白名单关键词: benchmark, pipeline; 目标物种: ant"
+  },
+  {
+    "source": "PubMed",
+    "title": "SwinePan for pig graph-based pangenome and multiomics data mining.",
+    "authors": "Lin M, Liu L, Cai G et al.",
+    "abstract": "",
+    "published": "2026 Sep 1",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42749490/",
+    "doi": "pii: gr.281750.125. doi: 10.1101/gr.281750.125",
+    "relevance_score": 4.3,
+    "relevance_reason": "白名单关键词: swine; 目标物种: pig, swine"
+  }
+]

@@ -1,0 +1,13 @@
+[
+  {
+    "source": "arXiv",
+    "title": "Peppy: An AI-Assisted Workflow for Tight Convergence Analysis of Optimization Algorithms",
+    "authors": "Jaewook J. Suh, TaeHo Yoon, Edward Duc Hien Nguyen et al.",
+    "abstract": "This paper presents Peppy, an AI-assisted workflow for discovering tight, analytic convergence proofs for first-order optimization algorithms. Generic approaches to using LLMs to conduct mathematical research target an unspecified, broad spectrum of problems and sometimes use the Lean 4 proof assistant for formalization. On the other hand, Peppy leverages domain-specific knowledge more heavily and is thereby capable of constructing the proofs in a more structured manner, which allow a minimal an",
+    "published": "2026-09-28",
+    "url": "https://arxiv.org/pdf/2609.35762v1",
+    "doi": "",
+    "relevance_score": 4.8,
+    "relevance_reason": "白名单关键词: workflow; 目标物种: ant"
+  }
+]

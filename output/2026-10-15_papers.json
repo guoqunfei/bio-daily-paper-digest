@@ -1,0 +1,13 @@
+[
+  {
+    "source": "arXiv",
+    "title": "CommerceGen-Studio: An End-to-End Framework for Commercial-Grade Main-Image Generation",
+    "authors": "Xiaoli Xu, Zhengtao Wu, Zhengze Xu et al.",
+    "abstract": "We present CommerceGen-Studio, an end-to-end framework for generating commercial-grade main images for e-commerce Stock Keeping Units (SKUs). Our framework is organized along a three-stage pipeline of information extraction, semantic rewriting, and multi-condition generation: Prompt-Eval-Refine-Loop Agent (PERL-Agent) distills heterogeneous SKU metadata into concise selling-point text lists through an iterative closed loop of VLM and LLM roles scored by a reference-free rubric. Layout Thinker Op",
+    "published": "2026-10-14",
+    "url": "https://arxiv.org/pdf/2610.20603v1",
+    "doi": "",
+    "relevance_score": 4.1,
+    "relevance_reason": "白名单关键词: tad, pipeline; 目标物种: ant"
+  }
+]

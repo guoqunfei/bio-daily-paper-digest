@@ -1,0 +1,25 @@
+[
+  {
+    "source": "bioRxiv",
+    "title": "Cromosomal genomes assemblies of twelve sheep breeds",
+    "authors": "ECHE, C., Birdes, C., Marcuzzo, C. et al.",
+    "abstract": "The sheep research community benefits from a genome assembly that has been refined over the last 15 years. However, the rich diversity of sheep breeds suggests that a single individual genome is not enough to represent the species full genomic content. Third-generation sequencing technologies have recently made it possible to generate high quality assemblies that should enable to elucidate unique and/or complex phenotype determinisms depending on genetic structural variations. In the SeqOccin pr",
+    "published": "2026-10-11",
+    "url": "https://doi.org/10.64898/2026.10.08.757562",
+    "doi": "10.64898/2026.10.08.757562",
+    "relevance_score": 6.4,
+    "relevance_reason": "高优先级关键词: structural variation, genome assembly; 白名单关键词: structural variation, genome assembly, third-generation sequencing"
+  },
+  {
+    "source": "bioRxiv",
+    "title": "The Genetic Landscape of Structural Variants in Aspergillus flavus using ONT and PacBio Sequencing",
+    "authors": "Woods, A., Lohmar, J. M., Malik, A. et al.",
+    "abstract": "Genetic rearrangement in the absence of selection is poorly understood. Long-read, high-depth sequencing has enabled analysis of the genetic landscape of spontaneous structural variants. We have applied PacBio Revio sequencing to identify the major classes of genetic alterations during long-term vegetative growth in Aspergillus flavus. These classes include a) precise deletions frequently associated with the flanking region of homology, b) clusters of short deletions that are heavily enriched wi",
+    "published": "2026-10-11",
+    "url": "https://doi.org/10.64898/2026.10.05.756768",
+    "doi": "10.64898/2026.10.05.756768",
+    "relevance_score": 5.6,
+    "relevance_reason": "白名单关键词: pacbio, structural variant; 目标物种: ant",
+    "location_bonus": 0.5
+  }
+]

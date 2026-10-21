@@ -1,0 +1,13 @@
+[
+  {
+    "source": "arXiv",
+    "title": "MindView: Benchmarking Generative Multi-View Spatial Intelligence",
+    "authors": "Yanbo Wang, Siqi Luo, Siyu Zhang et al.",
+    "abstract": "Spatial intelligence has recently been assessed through generative tasks such as spatially grounded image editing, yet language-guided generation of spatially consistent views from partial multi-view observations remains underexplored. We introduce MindView, a benchmark for generative multi-view spatial intelligence with 1,500 samples from 513 scenes across three indoor datasets. Its seven tasks form two families: geometry-dominant tasks specify changes in camera position and orientation, while ",
+    "published": "2026-10-20",
+    "url": "https://arxiv.org/pdf/2610.28622v1",
+    "doi": "",
+    "relevance_score": 4.8,
+    "relevance_reason": "白名单关键词: benchmark; 目标物种: ant"
+  }
+]

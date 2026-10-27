@@ -1,0 +1,24 @@
+[
+  {
+    "source": "PubMed",
+    "title": "Chromosome-scale genome assembly and annotation of Octodon degus.",
+    "authors": "Chiu JH, Zemke NR, Gao X et al.",
+    "abstract": "",
+    "published": "2026 Oct 2",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42933985/",
+    "doi": "pii: gr.281858.126. doi: 10.1101/gr.281858.126",
+    "relevance_score": 5.8,
+    "relevance_reason": "高优先级关键词: genome assembly; 白名单关键词: genome assembly"
+  },
+  {
+    "source": "PubMed",
+    "title": "Comparative genomics of insect peptide hormones: from annotation artifacts to evolutionary prediction.",
+    "authors": "Zhou HL, Li B",
+    "abstract": "",
+    "published": "2026 Oct 2",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42933601/",
+    "doi": "doi: 10.1016/j.cois.2026.101642",
+    "relevance_score": 4.6,
+    "relevance_reason": "白名单关键词: comparative genomics, insect; 目标物种: insect"
+  }
+]

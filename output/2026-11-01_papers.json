@@ -1,0 +1,13 @@
+[
+  {
+    "source": "bioRxiv",
+    "title": "A finished, telomere-to-telomere assembly for Botrytis cinerea strain B05.10",
+    "authors": "van Kan, J. A. L., Zheng, D., Pieterse, F. P. J. et al.",
+    "abstract": "We present an improved genome assembly of Botrytis cinerea strain B05.10 which serves as a reference isolate for most labs active in the Botrytis research. The existing assembly dating from 2017 was extended by adding 8 telomeric regions and a small number of minor errors was corrected. The new assembly contains telomeres on each chromosome end, except for Chr4 carrying the rDNA repeat. The unannotated assembly is deposited in NCBI and manual curation of gene models is ongoing. The new assembly ",
+    "published": "2026-10-25",
+    "url": "https://doi.org/10.64898/2026.10.20.760327",
+    "doi": "10.64898/2026.10.20.760327",
+    "relevance_score": 5.3,
+    "relevance_reason": "高优先级关键词: genome assembly; 白名单关键词: genome assembly"
+  }
+]

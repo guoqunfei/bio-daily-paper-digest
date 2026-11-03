@@ -1,0 +1,24 @@
+[
+  {
+    "source": "bioRxiv",
+    "title": "Localized Chromatin Rewiring Shapes Rhythmic Transcription within a Stable 3D Genome in Rice",
+    "authors": "zhang, y., Chen, G., Guo, L. et al.",
+    "abstract": "How spatial genome architecture coordinates rhythmic gene transcription across scales in plants remains poorly understood. Here, we integrated bridge linker Hi-C (BL-Hi-C), H3K9ac ChIP-seq and RNA-seq at six time points across a 24-h circadian cycle in rice. While global higher-order structure was largely invariant, with 84.5% of A/B compartments and over 95% of topologically associating domains (TADs) conserved across all time points, we identified 557 dynamic compartment transitions coupled to",
+    "published": "2026-10-27",
+    "url": "https://doi.org/10.64898/2026.10.23.761304",
+    "doi": "10.64898/2026.10.23.761304",
+    "relevance_score": 5.4,
+    "relevance_reason": "白名单关键词: hi-c, tad, 3d genome; 目标物种: ant"
+  },
+  {
+    "source": "PubMed",
+    "title": "Host Development and Environment Influence the Microbiomes of Aquatic Insects and Riparian Spiders.",
+    "authors": "Esser M, Perrotta B, Kidd K",
+    "abstract": "",
+    "published": "2026 Nov",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/42971791/",
+    "doi": "pii: e70472. doi: 10.1111/1462-2920.70472",
+    "relevance_score": 4.3,
+    "relevance_reason": "白名单关键词: insect; 目标物种: insect"
+  }
+]

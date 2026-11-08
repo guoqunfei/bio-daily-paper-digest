@@ -1,0 +1,13 @@
+[
+  {
+    "source": "bioRxiv",
+    "title": "The Findings Workflow: An agentic, collaborative, provenance-tracked framework for scientific data analysis with Claude Code",
+    "authors": "Riffle, M., Zelter, A., MacCoss, M. J.",
+    "abstract": "Scientists presented with quantitative data often face two related problems: confidence that an analysis is statistically and computationally correct, and provenance sufficient to reproduce the resulting figures and conclusions. Large language models (LLMs) can make sophisticated analyses accessible through a collaborative, conversational interface, but unstructured use can worsen both problems by producing plausible but incorrect results and obscuring the steps that produced them. Here we prese",
+    "published": "2026-11-01",
+    "url": "https://doi.org/10.64898/2026.10.28.762630",
+    "doi": "10.64898/2026.10.28.762630",
+    "relevance_score": 4.8,
+    "relevance_reason": "白名单关键词: workflow; 目标物种: ant"
+  }
+]

@@ -1,0 +1,13 @@
+[
+  {
+    "source": "arXiv",
+    "title": "ZeoBench: A Benchmark for Self-Supervised Learning on 3D Zeolite Representations",
+    "authors": "Aaron Sun, Yachan Liu, Ping Yang et al.",
+    "abstract": "Zeolites are an important class of porous crystalline materials with broad applications in gas storage, separations, and catalysis. Although hundreds of thousands of experimentally realized and hypothetical zeolite structures are known, identifying materials optimized for a target application remains challenging because property labels are expensive to obtain and available only for limited structure-molecule pairs. While prior work has demonstrated that 3D neural representations can predict zeol",
+    "published": "2026-11-06",
+    "url": "https://arxiv.org/pdf/2611.09880v1",
+    "doi": "",
+    "relevance_score": 4.8,
+    "relevance_reason": "白名单关键词: benchmark; 目标物种: ant"
+  }
+]

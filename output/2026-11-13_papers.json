@@ -1,0 +1,13 @@
+[
+  {
+    "source": "bioRxiv",
+    "title": "Epigenome-informed Polymer Modeling Reveals Chromosome Folding Landscapes across Distinct Genetic and Epigenetic Contexts",
+    "authors": "Bazmi, S., Turco, A., Kumar, S.",
+    "abstract": "Three-dimensional (3D) genome organization is critical for gene regulation, enabling long-range interactions between genes and distal regulatory elements. Genomic structural variations and epigenetic differences can perturb this organization, contributing to phenotypic variation and tissue-specific gene regulation. Prior studies have assessed the impact of these genetic and epigenetic changes on 3D genome folding, primarily using population-averaged features such as topologically associating dom",
+    "published": "2026-11-06",
+    "url": "https://doi.org/10.64898/2026.11.04.764273",
+    "doi": "10.64898/2026.11.04.764273",
+    "relevance_score": 7.6,
+    "relevance_reason": "高优先级关键词: structural variation; 白名单关键词: structural variation, 3d genome; 目标物种: pig"
+  }
+]

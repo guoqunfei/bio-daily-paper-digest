@@ -1,0 +1,24 @@
+[
+  {
+    "source": "PubMed",
+    "title": "A promoter InDel in porcine ACAT2 mediates EGR2-dependent transcriptional regulation of intramuscular fat deposition.",
+    "authors": "Zhao Y, Li F, Wei Y et al.",
+    "abstract": "",
+    "published": "2026 Nov 1",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/43039293/",
+    "doi": "doi: 10.1016/j.bbagrm.2026.195193",
+    "relevance_score": 4.6,
+    "relevance_reason": "白名单关键词: indel, porcine; 目标物种: porcine"
+  },
+  {
+    "source": "PubMed",
+    "title": "A semi-automated cell-free protein synthesis workflow for quantifying antibiotic-inactivating enzymes.",
+    "authors": "Bergum M, Martin B, Sutton JM et al.",
+    "abstract": "",
+    "published": "2026",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/43039629/",
+    "doi": "doi: 10.1016/bs.mie.2026.09.046",
+    "relevance_score": 4.3,
+    "relevance_reason": "白名单关键词: workflow; 目标物种: ant"
+  }
+]

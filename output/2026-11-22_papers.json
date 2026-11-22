@@ -1,0 +1,13 @@
+[
+  {
+    "source": "bioRxiv",
+    "title": "ISdetector: precise mapping of insertion sequences and associated structural variations from short-read sequencing data",
+    "authors": "Zhou, Y., Lu, B., Zhao, Y.",
+    "abstract": "Motivation. Repetitive insertion sequences (ISs) and adjacent structural variants (SVs) complicate precise mapping from bacte-rial short reads. Accurate insertion coordinates are important for studying genome evolution and tracking transmission. Results. ISdetector constructs IS-specific references with target copies removed and clusters soft-clipped reads to pinpoint insertion sites. On simulated genomes, it had higher recall and F1 score than ISMapper and MGEFinder. On 19 Mycobacterium tubercu",
+    "published": "2026-11-15",
+    "url": "https://doi.org/10.64898/2026.03.18.712784",
+    "doi": "10.64898/2026.03.18.712784",
+    "relevance_score": 8.6,
+    "relevance_reason": "高优先级关键词: structural variation; 白名单关键词: structural variation, structural variant; 目标物种: ant"
+  }
+]

@@ -1,0 +1,24 @@
+[
+  {
+    "source": "bioRxiv",
+    "title": "Daphniphyllum macropodum genome assembly and multiplexed screening unveils alkaloid modifying enzymes",
+    "authors": "Swamidatta, S. H., Radzikowska, B. A., Taylor, D. J. et al.",
+    "abstract": "Daphniphyllum macropodum, a small shrub or tree native to East Asia, produces bioactive polycyclic alkaloids of remarkable complexity and variety, making them long-standing, attractive targets for chemical synthesis. However, the biosynthetic origins of Daphniphyllum alkaloids remain unknown, and no pathway-associated enzymes have been identified to date. Here, we report the chromosome-level genome assembly of D. macropodum, representing the first genome assembly for the Daphniphyllaceae, a fami",
+    "published": "2026-11-18",
+    "url": "https://doi.org/10.64898/2026.11.16.766977",
+    "doi": "10.64898/2026.11.16.766977",
+    "relevance_score": 6.6,
+    "relevance_reason": "高优先级关键词: genome assembly; 白名单关键词: genome assembly, chromosome-level"
+  },
+  {
+    "source": "PubMed",
+    "title": "Donor-specific assemblies enhance somatic structural variant detection in complex genomic regions.",
+    "authors": "Mack TM, Lin J, Ren L et al.",
+    "abstract": "",
+    "published": "2026 Nov 2",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/43078610/",
+    "doi": "pii: gr.282016.126. doi: 10.1101/gr.282016.126",
+    "relevance_score": 4.3,
+    "relevance_reason": "白名单关键词: structural variant; 目标物种: ant"
+  }
+]

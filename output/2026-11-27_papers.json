@@ -1,0 +1,25 @@
+[
+  {
+    "source": "bioRxiv",
+    "title": "Large-scale Nanopore sequencing resolves species diversity and distribution of European Ulva",
+    "authors": "van der Loos, L. M., D'hondt, S., Coulembier Vandelannoote, E. et al.",
+    "abstract": "The green algal genus Ulva is widespread and ecologically important in European coastal ecosystems. However, species diversity and distributions remain poorly resolved due to phenotypic plasticity and historical taxonomic uncertainty. By adopting a large-scale sampling and barcoding effort, we provide a unique continent-scale assessment of Ulva species diversity and distribution. We developed a novel high-throughput Oxford Nanopore Technologies sequencing strategy, pooling 768 samples (eight 96-",
+    "published": "2026-11-20",
+    "url": "https://doi.org/10.64898/2026.11.17.767378",
+    "doi": "10.64898/2026.11.17.767378",
+    "relevance_score": 5.6,
+    "relevance_reason": "白名单关键词: oxford nanopore, nanopore; 目标物种: ant",
+    "location_bonus": 0.5
+  },
+  {
+    "source": "arXiv",
+    "title": "A gene informed benchmark for BioScoring of pathology foundation models",
+    "authors": "Paul Vilars, Vincent Quoc-Huy Trinh, Maria Vakalopoulou et al.",
+    "abstract": "Pathology foundation models are usually compared by their performance on downstream tasks such as classification and retrieval. While such benchmarks measure how useful a model is, they provide no insight into the biology it represents. We introduce BioScore, a benchmark that quantifies how well an image encoder captures cell identities, with spatial transcriptomics of the same tissue as the reference. A sparse autoencoder splits the encoder's patch embeddings into sparse features, which we clus",
+    "published": "2026-11-25",
+    "url": "https://arxiv.org/pdf/2611.34930v1",
+    "doi": "",
+    "relevance_score": 4.8,
+    "relevance_reason": "白名单关键词: benchmark; 目标物种: ant"
+  }
+]
